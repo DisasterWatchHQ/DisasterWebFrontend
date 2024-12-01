@@ -1,18 +1,18 @@
 import Card from "../components/Card";
 
 const Home = () => {
-  const cards = [
-    { title: "Alerts", description: "View real-time disaster alerts" },
-    { title: "Reports", description: "Submit or view disaster reports" },
-    { title: "Resources", description: "Find emergency resources" },
+  const features = [
+    { title: "Alerts", description: "Real-time disaster alerts." },
+    { title: "Reports", description: "Submit and view disaster reports." },
+    { title: "Resources", description: "Access emergency resources." },
   ];
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">Welcome to Disaster Watch</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-        {cards.map((card, index) => (
-          <Card key={index} {...card} />
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-4">Welcome to Disaster Watch</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {features.map((feature, index) => (
+          <Card key={index} {...feature} />
         ))}
       </div>
     </div>

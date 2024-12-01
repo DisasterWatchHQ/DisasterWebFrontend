@@ -1,8 +1,15 @@
-const Card = ({ title, description }) => {
+import { cn } from "../lib/utils";
+
+const Card = ({ title, description, className }) => {
   return (
-    <div className="border rounded p-4 shadow hover:shadow-lg transition">
-      <h3 className="font-bold text-lg">{title}</h3>
-      <p>{description}</p>
+    <div
+      className={cn(
+        "border rounded-md p-4 shadow hover:shadow-lg transition",
+        className
+      )}
+    >
+      <h3 className="text-lg font-bold">{title}</h3>
+      <p className="text-sm">{description}</p>
     </div>
   );
 };
