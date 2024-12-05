@@ -2,6 +2,12 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 export default function Guides() {
+  const guides=[
+    {category:"Flood",info:"Stay on high ground and avoid floodwater."},
+    {category:"Earthquake",info:"Duck, cover, and hold during tremors."},
+    {category:"Fire",info:"Evacuate immediately; use wet cloth to breathe."},
+  ];
+  
     return (
         <div className="flex flex-col min-h-screen">
           <Header />
