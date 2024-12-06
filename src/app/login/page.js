@@ -1,6 +1,7 @@
-import Footer from "../components/Footer";
-import LoginForm from "../components/LoginForm";
-
+"use client";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+import LoginForm from "@/components/LoginForm";
 export default function Login(){
     return(
         <div className="flex flex-col min-h-screen">
