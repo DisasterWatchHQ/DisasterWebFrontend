@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
         <Header/>
 
         {/* Main Content */}
-        <main className="flex-grow container mx-auto py-6 px-4">
+        <main className="flex-grow container min-w-full ">
           {children}
         </main>
 
