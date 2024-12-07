@@ -1,12 +1,21 @@
-// components/ReportCard.js
 export default function ReportCard({ title, description, date, location }) {
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="border p-4 rounded-lg mb-4 shadow-md">
-      <h3 className="text-lg font-bold">{title}</h3>
-      <p>{description}</p>
-      <div className="text-sm text-gray-500">
-        <p>Date: {new Date(date).toLocaleString()}</p>
-        <p>Location: {location}</p>
+    <div className="bg-white rounded-lg shadow-md p-6 mb-4 hover:shadow-lg transition-shadow">
+      <h2 className="text-xl font-semibold mb-2">{title}</h2>
+      <p className="text-gray-600 mb-3">{description}</p>
+      <div className="flex justify-between text-sm text-gray-500">
+        <span>{location}</span>
+        <span>{formatDate(date)}</span>
       </div>
     </div>
   );
