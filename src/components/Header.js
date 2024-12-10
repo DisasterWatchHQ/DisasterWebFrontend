@@ -12,8 +12,7 @@ export default function Header() {
           <Link href="/guides">Guides</Link>
           <Link href="/resources">Resources</Link>
           <Link href="/profile">Profile</Link>
-          <Link href="/login">Sign In</Link>
-          <Link href="/register">Sign Up</Link>
+          <Link href="/auth">Sign In</Link>
         </div>
       </nav>
     </header>
