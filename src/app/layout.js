@@ -1,6 +1,8 @@
 import localFont from "next/font/local";
+// import { usePathname } from "next/navigation";
 import "./globals.css";
 import Header from '../components/Header';
+import LayoutWrapper from '@/components/LayoutWrapper';
 // import { ThemeProvider } from "@/components/theme-provider"
 
 const geistSans = localFont({
@@ -20,24 +22,29 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  
+  const header = <Header />;
+    const footer = (
+      <footer className="bg-gray-800 text-white py-4 px-6">
+        <div className="container mx-auto text-center">
+          <p>© 2024 DisasterWatch. All rights reserved.</p>
+        </div>
+      </footer>
+    );
+    
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
-        <Header/>
+        <LayoutWrapper header={header} footer={footer}>
 
         {/* Main Content */}
         <main className="flex-grow container min-w-full ">
           {children}
         </main>
 
-        {/* Footer */}
-        <footer className="bg-gray-800 text-white py-4 px-6">
-          <div className="container mx-auto text-center">
-            <p>© 2024 DisasterWatch. All rights reserved.</p>
-          </div>
-        </footer>
+        </LayoutWrapper>
       </body>
     </html>
   );
