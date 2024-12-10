@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SignInForm } from "@/components/auth/sign-in-form"
 import { SignUpForm } from "@/components/auth/sign-up-form"
 import { Card } from "@/components/ui/card"
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("signin")
@@ -14,6 +16,13 @@ export default function AuthPage() {
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
         <div className="absolute inset-0 bg-zinc-900" />
         <div className="relative z-20 flex items-center text-lg font-medium">
+          <Link 
+            href="/" 
+            className="flex items-center hover:text-gray-300 transition-colors mr-4"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -36,6 +45,13 @@ export default function AuthPage() {
           </blockquote>
         </div>
       </div>
+      {/* Add a mobile-visible back arrow */}
+      <Link 
+        href="/" 
+        className="absolute left-4 top-4 text-gray-700 hover:text-gray-900 transition-colors lg:hidden"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Link>
       <div className="lg:p-8">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <Card className="p-6">
