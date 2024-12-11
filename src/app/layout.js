@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Header from '../components/Header';
 import LayoutWrapper from '@/components/LayoutWrapper';
+import Footer from "@/components/Footer";
 // import { ThemeProvider } from "@/components/theme-provider"
 
 const geistSans = localFont({
@@ -24,13 +25,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   
   const header = <Header />;
-    const footer = (
-      <footer className="bg-gray-800 text-white py-4 px-6">
-        <div className="container mx-auto text-center">
-          <p>© 2024 DisasterWatch. All rights reserved.</p>
-        </div>
-      </footer>
-    );
+  const footer = <Footer />
     
   return (
     <html lang="en" suppressHydrationWarning>
