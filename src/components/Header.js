@@ -13,25 +13,15 @@ import {
 } from "@/components/ui/navigation-menu"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu } from "lucide-react"
+import { Menu, Sun, Moon } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useTheme } from "next-themes"
 
 const routes = [
-  {
-    href: "/map",
-    label: "Map",
-  },
-  {
-    href: "/feed",
-    label: "Feed",
-  },
-  {
-    href: "/guides",
-    label: "Guides",
-  },
-  {
-    href: "/resources",
-    label: "Resources",
-  },
+  { href: "/map", label: "Map" },
+  { href: "/feed", label: "Feed" },
+  { href: "/guides", label: "Guides" },
+  { href: "/resources", label: "Resources" },
 ]
 
 export default function Header() {
