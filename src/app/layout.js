@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from '../components/Header';
 import LayoutWrapper from '@/components/LayoutWrapper';
 import Footer from "@/components/Footer";
+import "leaflet/dist/leaflet.css";
 // import { ThemeProvider } from "@/components/theme-provider"
 
 const geistSans = localFont({
