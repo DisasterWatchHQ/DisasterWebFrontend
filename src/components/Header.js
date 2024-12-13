@@ -27,6 +27,12 @@ const routes = [
 export default function Header() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = React.useState(false)
+  const { setTheme, theme } = useTheme()
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false)
+
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light")
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
