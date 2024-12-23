@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Icons } from "@/components/ui/icons"
 
 import { signIn } from "@/utils/apiAuth"
-
+import { useUser } from "@/providers/UserContext" 
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -27,7 +27,8 @@ const formSchema = z.object({
 })
 
 export function SignInForm() {
-  const router = useRouter()
+  const router = useRouter();
+  const { login } = useUser(); 
   const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm({
@@ -45,7 +46,8 @@ export function SignInForm() {
         email: values.email,
         password: values.password,
       });
-      console.log(response.message);
+      const userData = response.user;
+      login(userData);
       alert("SignIn successful! Redirecting to profile...");
       router.push("/profile");
     } catch (error) {
