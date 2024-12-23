@@ -16,6 +16,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, Sun, Moon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useTheme } from "next-themes"
+import { useUser } from "@/providers/UserContext" // Importing the context
 
 const routes = [
   { href: "/map", label: "Map" },
@@ -28,10 +29,14 @@ export default function Header() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = React.useState(false)
   const { setTheme, theme } = useTheme()
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false)
+  const { user, isLoggedIn, logout } = useUser(); // Using the context to manage login state
 
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light")
+  }
+  
+  const handleLogout = () => {
+    logout(); 
   }
 
   return (
@@ -113,18 +118,17 @@ export default function Header() {
           {isLoggedIn ? (
             <>
               <Avatar>
-                <AvatarImage src="/placeholder-avatar.jpg" />
-                <AvatarFallback>UN</AvatarFallback>
+                <AvatarImage src={user.avatar || "/placeholder-avatar.jpg"} />
+                <AvatarFallback>{user.name ? user.name.charAt(0) : "U"}</AvatarFallback>
               </Avatar>
               <Link href="/profile">
                 <Button variant="ghost">Profile</Button>
               </Link>
-              <Button
-                variant="destructive"
-                onClick={() => setIsLoggedIn(false)}
-              >
-                Logout
-              </Button>
+              <Link href="/auth" onClick={handleLogout}>
+                  <Button variant="destructive">
+                    Logout
+                </Button>
+              </Link>
             </>
           ) : (
             <Link href="/auth">
