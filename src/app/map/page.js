@@ -277,7 +277,7 @@ export default function Map() {
             )}
           </GoogleMap>
 
-          <div className="absolute bottom-4 right-4 bg-white p-4 rounded-md shadow-md">
+          {/* <div className="absolute bottom-4 right-4 bg-white p-4 rounded-md shadow-md">
             <h4 className="font-semibold mb-2">Legend</h4>
             {disasterTypes.map(type => type.id !== 'all' && (
               <div key={type.id} className="flex items-center gap-2">
@@ -293,7 +293,7 @@ export default function Map() {
                 <span>{type.name}</span>
               </div>
             ))}
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>
