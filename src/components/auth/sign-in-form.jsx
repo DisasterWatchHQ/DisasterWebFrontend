@@ -18,6 +18,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Icons } from "@/components/ui/icons"
 
+import { signIn } from "@/utils/apiAuth"
+
+
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -36,16 +39,20 @@ export function SignInForm() {
   })
 
   async function onSubmit(values) {
-    setIsLoading(true)
-    
+    setIsLoading(true);
     try {
-      // Add your authentication logic here
-      console.log(values)
-      router.push("/dashboard")
+      const response = await signIn({
+        email: values.email,
+        password: values.password,
+      });
+      console.log(response.message);
+      alert("SignIn successful! Redirecting to profile...");
+      router.push("/profile");
     } catch (error) {
-      console.error(error)
+      console.error(error.message);
+      alert(error.message); 
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
