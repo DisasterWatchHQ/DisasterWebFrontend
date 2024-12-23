@@ -6,6 +6,7 @@ import LayoutWrapper from '@/components/LayoutWrapper';
 import Footer from "@/components/Footer";
 import "leaflet/dist/leaflet.css";
 import { ThemeProvider } from "next-themes"
+import { UserProvider } from "@/providers/UserContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
+        <UserProvider>
         <ThemeProvider
                 attribute="class"
                 defaultTheme="system"
@@ -48,6 +50,7 @@ export default function RootLayout({ children }) {
 
         </LayoutWrapper>
       </ThemeProvider>
+        </UserProvider>
       </body>
     </html>
   );
