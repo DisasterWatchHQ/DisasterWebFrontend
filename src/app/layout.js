@@ -42,12 +42,12 @@ export default function RootLayout({ children }) {
         <LayoutWrapper header={header} footer={footer}>
 
         {/* Main Content */}
-        <main className="flex-grow container min-w-full ">
+        <main className="flex-grow container min-w-full">
           {children}
         </main>
 
         </LayoutWrapper>
-              </ThemeProvider>
+      </ThemeProvider>
       </body>
     </html>
   );
