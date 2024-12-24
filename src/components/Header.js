@@ -118,7 +118,7 @@ export default function Header() {
           {isLoggedIn ? (
             <>
               <Avatar>
-                <AvatarImage src={user.avatar || "/placeholder-avatar.jpg"} />
+                <AvatarImage src={user.avatar || "/placeholder-avatar.png"} />
                 <AvatarFallback>{user.name ? user.name.charAt(0) : "U"}</AvatarFallback>
               </Avatar>
               <Link href="/profile">
@@ -132,7 +132,7 @@ export default function Header() {
             </>
           ) : (
             <Link href="/auth">
-              <Button>Login / Register</Button>
+              <Button>Login</Button>
             </Link>
           )}
         </div>
