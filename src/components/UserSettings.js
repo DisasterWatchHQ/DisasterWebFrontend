@@ -13,7 +13,9 @@ export default function UserSettings() {
     <div className="p-4">
       <h3 className="text-xl font-bold">User Settings</h3>
       <div className="flex items-center">
-        <label htmlFor="darkMode" className="mr-2">Dark Mode</label>
+        <label htmlFor="darkMode" className="mr-2">
+          Dark Mode
+        </label>
         <input
           type="checkbox"
           id="darkMode"

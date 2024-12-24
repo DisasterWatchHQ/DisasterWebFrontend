@@ -1,11 +1,11 @@
 import localFont from "next/font/local";
 // import { usePathname } from "next/navigation";
 import "./globals.css";
-import Header from '../components/Header';
-import LayoutWrapper from '@/components/LayoutWrapper';
+import Header from "../components/Header";
+import LayoutWrapper from "@/components/LayoutWrapper";
 import Footer from "@/components/Footer";
 import "leaflet/dist/leaflet.css";
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/providers/UserContext";
 
 const geistSans = localFont({
@@ -25,34 +25,28 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  
   const header = <Header />;
-  const footer = <Footer />
-    
+  const footer = <Footer />;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <UserProvider>
-        <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-                disableTransitionOnChange
-              >
-        <LayoutWrapper header={header} footer={footer}>
-
-        {/* Main Content */}
-        <main className="flex-grow container min-w-full">
-          {children}
-        </main>
-
-        </LayoutWrapper>
-      </ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <LayoutWrapper header={header} footer={footer}>
+              {/* Main Content */}
+              <main className="flex-grow container min-w-full">{children}</main>
+            </LayoutWrapper>
+          </ThemeProvider>
         </UserProvider>
       </body>
     </html>
   );
 }
-

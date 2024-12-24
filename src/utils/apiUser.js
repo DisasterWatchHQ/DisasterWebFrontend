@@ -1,6 +1,6 @@
 export const getUserProfile = async (userId) => {
   const token = localStorage.getItem("authToken");
-  
+
   try {
     const response = await fetch(`http://localhost:5000/api/user/${userId}`, {
       headers: {
@@ -10,7 +10,7 @@ export const getUserProfile = async (userId) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || "Failed to fetch user profile");
     }
@@ -23,16 +23,16 @@ export const getUserProfile = async (userId) => {
 
 export const updateUser = async (userId, updates) => {
   const token = localStorage.getItem("authToken");
-  
-  console.log('Making request with:', {
+
+  console.log("Making request with:", {
     userId,
     updates,
-    token: token ? 'Token exists' : 'No token'
+    token: token ? "Token exists" : "No token",
   });
 
   try {
     const response = await fetch(`http://localhost:5000/api/user/${userId}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -43,20 +43,20 @@ export const updateUser = async (userId, updates) => {
         ...(updates.location && {
           location: {
             latitude: updates.location.latitude,
-            longitude: updates.location.longitude
-          }
-        })
-      })
+            longitude: updates.location.longitude,
+          },
+        }),
+      }),
     });
-    
+
     const data = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Failed to update user");
     }
-    
+
     return data;
   } catch (error) {
-    console.error('Error in updateUser:', error);
+    console.error("Error in updateUser:", error);
     throw error;
   }
 };

@@ -1,34 +1,39 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import {
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  InfoWindow,
+} from "@react-google-maps/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Search, 
-  LayersIcon, 
-  Filter, 
+import {
+  Search,
+  LayersIcon,
+  Filter,
   AlertTriangle,
-  Locate
-} from 'lucide-react';
+  Locate,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import Image from "next/image";
 
-const DEFAULT_MARKER_ICON = '/markers/default.png';
+const DEFAULT_MARKER_ICON = "/markers/default.png";
 
 const disasterTypes = [
-  { id: 'all', name: 'All Types' },
-  { id: 'earthquake', name: 'Earthquake' },
-  { id: 'flood', name: 'Flood' },
-  { id: 'fire', name: 'Fire' },
-  { id: 'hurricane', name: 'Hurricane' },
+  { id: "all", name: "All Types" },
+  { id: "earthquake", name: "Earthquake" },
+  { id: "flood", name: "Flood" },
+  { id: "fire", name: "Fire" },
+  { id: "hurricane", name: "Hurricane" },
 ];
 
 const sampleDisasters = [
@@ -56,7 +61,7 @@ const sampleDisasters = [
 export default function Map() {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
-    libraries: ['places']
+    libraries: ["places"],
   });
 
   const [map, setMap] = useState(null);
@@ -65,7 +70,7 @@ export default function Map() {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [disasters, setDisasters] = useState(sampleDisasters);
-  const [selectedType, setSelectedType] = useState('all');
+  const [selectedType, setSelectedType] = useState("all");
   const [userLocation, setUserLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -76,7 +81,7 @@ export default function Map() {
         // Replace with actual API call
         setDisasters(sampleDisasters);
       } catch (error) {
-        console.error('Error fetching disaster data:', error);
+        console.error("Error fetching disaster data:", error);
       }
     };
 
@@ -90,7 +95,7 @@ export default function Map() {
         (position) => {
           const location = {
             lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lng: position.coords.longitude,
           };
           setUserLocation(location);
           setCenter(location);
@@ -100,22 +105,22 @@ export default function Map() {
         (error) => {
           console.error("Error getting location:", error);
           setIsLoading(false);
-        }
+        },
       );
     }
   };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-    
+
     setIsLoading(true);
     try {
       if (!window.google) return;
-      
+
       const geocoder = new window.google.maps.Geocoder();
       const response = await new Promise((resolve, reject) => {
         geocoder.geocode({ address: searchQuery }, (results, status) => {
-          if (status === 'OK') {
+          if (status === "OK") {
             resolve(results);
           } else {
             reject(status);
@@ -135,8 +140,8 @@ export default function Map() {
     }
   };
 
-  const filteredDisasters = disasters.filter(disaster => 
-    selectedType === 'all' || disaster.type === selectedType
+  const filteredDisasters = disasters.filter(
+    (disaster) => selectedType === "all" || disaster.type === selectedType,
   );
 
   const mapOptions = {
@@ -145,7 +150,7 @@ export default function Map() {
     fullscreenControl: true,
     styles: [
       // Add custom map styles here if needed
-    ]
+    ],
   };
 
   if (loadError) {
@@ -181,23 +186,20 @@ export default function Map() {
           <div className="flex justify-between items-center">
             <CardTitle>Disaster Location Map</CardTitle>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={getUserLocation}
                 disabled={isLoading}
               >
                 <Locate className="h-4 w-4 mr-2" />
-                {isLoading ? 'Loading...' : 'My Location'}
+                {isLoading ? "Loading..." : "My Location"}
               </Button>
-              <Select
-                value={selectedType}
-                onValueChange={setSelectedType}
-              >
+              <Select value={selectedType} onValueChange={setSelectedType}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {disasterTypes.map(type => (
+                  {disasterTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
@@ -215,16 +217,16 @@ export default function Map() {
                   className="pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   disabled={isLoading}
                 />
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleSearch}
               disabled={isLoading || !searchQuery.trim()}
             >
-              {isLoading ? 'Searching...' : 'Search'}
+              {isLoading ? "Searching..." : "Search"}
             </Button>
           </div>
         </CardHeader>
@@ -240,8 +242,8 @@ export default function Map() {
               <Marker
                 position={userLocation}
                 icon={{
-                  url: '/user-location.png',
-                  scaledSize: new google.maps.Size(30, 30)
+                  url: "/user-location.png",
+                  scaledSize: new google.maps.Size(30, 30),
                 }}
               />
             )}
@@ -252,7 +254,7 @@ export default function Map() {
                 position={disaster.position}
                 icon={{
                   url: `/markers/${disaster.type}.png`,
-                  scaledSize: new google.maps.Size(30, 30)
+                  scaledSize: new google.maps.Size(30, 30),
                 }}
                 onClick={() => setSelectedMarker(disaster)}
               />
