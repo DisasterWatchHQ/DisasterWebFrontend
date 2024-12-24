@@ -23,11 +23,15 @@ export const signIn = async (userData) => {
     },
     body: JSON.stringify(userData),
   });
-
+  
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "Something went wrong!");
   }
-
-  return await response.json();
+  
+  const data = await response.json();
+  localStorage.setItem("authToken", data.token);
+  localStorage.setItem("userId", data.user.id);
+  localStorage.setItem("user", JSON.stringify(data.user));
+  return data;
 };
