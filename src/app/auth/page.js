@@ -10,6 +10,10 @@ import { ArrowLeft, LogInIcon, UserPlusIcon } from "lucide-react";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("signin");
+  
+  const handleSignUpSuccess = () => {
+      setActiveTab("signin");
+    };
 
   return (
     <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -93,7 +97,7 @@ export default function AuthPage() {
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-4">
-                <SignUpForm />
+                <SignUpForm onSignUpSuccess={handleSignUpSuccess} />
               </TabsContent>
             </Tabs>
 
