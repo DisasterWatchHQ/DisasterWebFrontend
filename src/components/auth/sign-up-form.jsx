@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 import {
   Form,
@@ -32,7 +33,8 @@ const formSchema = z
     path: ["confirmPassword"],
   });
 
-export function SignUpForm() {
+export function SignUpForm({onSignUpSuccess}) {
+  const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,6 +45,7 @@ export function SignUpForm() {
       email: "",
       password: "",
       confirmPassword: "",
+      type: "",
     },
   });
 
@@ -53,13 +56,24 @@ export function SignUpForm() {
         name: values.name,
         email: values.email,
         password: values.password,
+        type: "registered",
       });
-      console.log(response.message);
-      alert("Signup successful! Redirecting to profile...");
-      router.push("/profile");
+      toast({
+        title: "Success",
+        description: "Account created successfully! Please sign in.",
+        variant: "default",
+      });
+      form.reset();
+      if (onSignUpSuccess) {
+        onSignUpSuccess();
+      }
     } catch (error) {
       console.error(error.message);
-      alert(error.message);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
