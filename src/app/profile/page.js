@@ -49,12 +49,14 @@ import {
 } from "@/components/ui/alert-dialog";
 // import { useUser } from "../../providers/UserContext";
 import { getUserProfile, updateUser } from "@/utils/apiUser";
+import { useRouter } from "next/navigation";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -67,7 +69,6 @@ export default function Profile() {
             email: "anonymous@example.com",
             location: null,
             organization: "Not specified",
-            phone: "Not specified",
             joinDate: "Recent",
             preferences: {
               notifications: true,
@@ -117,8 +118,7 @@ export default function Profile() {
       const updatedUser = {
         name: formData.get("name"),
         email: formData.get("email"),
-        organization: formData.get("organization"),
-        phone: formData.get("phone"),
+        associated_department: formData.get("organization"),
         location: user.location,
       };
 
@@ -131,7 +131,16 @@ export default function Profile() {
       const data = await updateUser(userId, updatedUser);
 
       if (data.success) {
-        setUser(data.user);
+        const transformedUser = {
+          ...user, // Keep existing user data
+          ...data.user, // Merge new backend data
+          organization: data.user.associated_department || "Not specified",
+          joinDate: data.user.createdAt
+            ? new Date(data.user.createdAt).toLocaleDateString()
+            : "Recent",
+          preferences: user.preferences, // Preserve preferences
+        };
+        setUser(transformedUser);
         localStorage.setItem("user", JSON.stringify(data.user));
         toast({
           title: "Profile updated",
@@ -237,15 +246,6 @@ export default function Profile() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Phone className="h-4 w-4 opacity-70" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">Phone</p>
-                    <p className="text-sm text-muted-foreground">
-                      {user?.phone}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
                   <Calendar className="h-4 w-4 opacity-70" />
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none">Joined</p>
@@ -269,7 +269,12 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" name="name" defaultValue={user?.name} />
+                    <Input 
+                      id="name" 
+                      name="name" 
+                      value={user?.name || ''} 
+                      onChange={(e) => setUser(prev => ({...prev, name: e.target.value}))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
@@ -277,7 +282,8 @@ export default function Profile() {
                       id="email"
                       name="email"
                       type="email"
-                      defaultValue={user?.email}
+                      value={user?.email || ''}
+                      onChange={(e) => setUser(prev => ({...prev, email: e.target.value}))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -342,16 +348,8 @@ export default function Profile() {
                     <Input
                       id="organization"
                       name="organization"
-                      defaultValue={user?.organization}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      defaultValue={user?.phone}
+                      value={user?.organization || ''}
+                      onChange={(e) => setUser(prev => ({...prev, organization: e.target.value}))}
                     />
                   </div>
                 </div>
