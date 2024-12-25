@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
   const footer = <Footer />;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
