@@ -49,7 +49,9 @@ import {
 } from "@/components/ui/alert-dialog";
 // import { useUser } from "../../providers/UserContext";
 import { getUserProfile, updateUser } from "@/utils/apiUser";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -269,11 +271,13 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input 
-                      id="name" 
-                      name="name" 
-                      value={user?.name || ''} 
-                      onChange={(e) => setUser(prev => ({...prev, name: e.target.value}))}
+                    <Input
+                      id="name"
+                      name="name"
+                      value={user?.name || ""}
+                      onChange={(e) =>
+                        setUser((prev) => ({ ...prev, name: e.target.value }))
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -282,8 +286,10 @@ export default function Profile() {
                       id="email"
                       name="email"
                       type="email"
-                      value={user?.email || ''}
-                      onChange={(e) => setUser(prev => ({...prev, email: e.target.value}))}
+                      value={user?.email || ""}
+                      onChange={(e) =>
+                        setUser((prev) => ({ ...prev, email: e.target.value }))
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -348,8 +354,13 @@ export default function Profile() {
                     <Input
                       id="organization"
                       name="organization"
-                      value={user?.organization || ''}
-                      onChange={(e) => setUser(prev => ({...prev, organization: e.target.value}))}
+                      value={user?.organization || ""}
+                      onChange={(e) =>
+                        setUser((prev) => ({
+                          ...prev,
+                          organization: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -417,14 +428,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <Button variant="outline" className="w-full justify-start">
-                  <Shield className="mr-2 h-4 w-4" />
-                  Change Password
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Update Email
-                </Button>
+                 <ChangePasswordDialog /> 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
