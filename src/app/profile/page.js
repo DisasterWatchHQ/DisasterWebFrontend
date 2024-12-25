@@ -48,7 +48,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 // import { useUser } from "../../providers/UserContext";
-import { getUserProfile, updateUser } from "@/utils/apiUser";
+import { getUserProfile, updateUser, deleteUser } from "@/utils/apiUser";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -175,12 +175,39 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = async () => {
-    // Add account deletion logic
-    toast({
-      title: "Account deleted",
-      description: "Your account has been permanently deleted.",
-      variant: "destructive",
-    });
+    try {
+      const userId = localStorage.getItem("userId");
+      const token = localStorage.getItem("authToken");
+
+      if (!userId || !token) {
+        toast({
+          title: "Error",
+          description: "User not authenticated. Please log in again.",
+          variant: "destructive",
+        });
+        router.push("/auth");
+        return;
+      }
+
+      const response = await deleteUser(userId);
+
+      localStorage.clear();
+
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted.",
+        variant: "destructive",
+      });
+
+      router.push("/auth");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to delete account. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -428,7 +455,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                 <ChangePasswordDialog /> 
+                <ChangePasswordDialog />
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
