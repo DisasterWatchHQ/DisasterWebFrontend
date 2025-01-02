@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
 
 import {
   Form,
@@ -14,18 +14,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Icons } from "@/components/ui/icons"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Icons } from "@/components/ui/icons";
+
+import { signIn } from "@/utils/apiAuth";
+import { useUser } from "@/providers/UserContext";
 
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-})
+});
 
 export function SignInForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const { login } = useUser();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -33,19 +37,24 @@ export function SignInForm() {
       email: "",
       password: "",
     },
-  })
+  });
 
   async function onSubmit(values) {
-    setIsLoading(true)
-    
+    setIsLoading(true);
     try {
-      // Add your authentication logic here
-      console.log(values)
-      router.push("/dashboard")
+      const response = await signIn({
+        email: values.email,
+        password: values.password,
+      });
+      const userData = response.user;
+      login(userData);
+      alert("SignIn successful! Redirecting to profile...");
+      router.push("/profile");
     } catch (error) {
-      console.error(error)
+      console.error(error.message);
+      alert(error.message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -79,12 +88,10 @@ export function SignInForm() {
           )}
         />
         <Button className="w-full" type="submit" disabled={isLoading}>
-          {isLoading && (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-          )}
+          {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
           Sign In
         </Button>
       </form>
     </Form>
-  )
+  );
 }

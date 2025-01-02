@@ -5,23 +5,24 @@ const features = [
   {
     icon: <MapIcon className="h-8 w-8" />,
     title: "Interactive Map",
-    description: "Real-time visualization of active disasters and emergency zones."
+    description:
+      "Real-time visualization of active disasters and emergency zones.",
   },
   {
     icon: <BellIcon className="h-8 w-8" />,
     title: "Live Alerts",
-    description: "Instant notifications about emergencies in your area."
+    description: "Instant notifications about emergencies in your area.",
   },
   {
     icon: <BookOpenIcon className="h-8 w-8" />,
     title: "Safety Guides",
-    description: "Comprehensive guides for different types of disasters."
+    description: "Comprehensive guides for different types of disasters.",
   },
   {
     icon: <PhoneIcon className="h-8 w-8" />,
     title: "Emergency Contacts",
-    description: "Quick access to emergency services and hotlines."
-  }
+    description: "Quick access to emergency services and hotlines.",
+  },
 ];
 
 export default function Features() {
