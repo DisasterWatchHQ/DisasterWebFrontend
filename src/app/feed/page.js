@@ -1,15 +1,21 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useReports } from "@/hooks/useReports"
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ReloadIcon, BellIcon, FilterIcon } from "@radix-ui/react-icons"
-import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"
+import { useState, useEffect } from "react";
+import { useReports } from "@/hooks/useReports";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReloadIcon, BellIcon, FilterIcon } from "@radix-ui/react-icons";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,24 +24,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 export default function Feed() {
-  const { toast } = useToast()
-  const { reports, loading, error, refreshReports } = useReports()
-  const [activeWarnings, setActiveWarnings] = useState([])
-  const [updates, setUpdates] = useState([])
-  const [showAlert, setShowAlert] = useState(false)
-  const [selectedFilter, setSelectedFilter] = useState('all')
+  const { toast } = useToast();
+  const { reports, loading, error, refreshReports } = useReports();
+  const [activeWarnings, setActiveWarnings] = useState([]);
+  const [updates, setUpdates] = useState([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("all");
 
   // Simulated real-time updates
   useEffect(() => {
     // Websocket connection would go here
     const interval = setInterval(() => {
       // Simulate new updates
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [])
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -45,11 +51,7 @@ export default function Feed() {
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex space-x-4 px-4">
               {activeWarnings.map((warning, index) => (
-                <Badge 
-                  key={index} 
-                  variant="warning"
-                  className="animate-pulse"
-                >
+                <Badge key={index} variant="warning" className="animate-pulse">
                   {warning.message}
                 </Badge>
               ))}
@@ -63,28 +65,29 @@ export default function Feed() {
           {/* Header Section */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Disaster Feed</h1>
-              <p className="text-muted-foreground">Live updates and verified reports</p>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Disaster Feed
+              </h1>
+              <p className="text-muted-foreground">
+                Live updates and verified reports
+              </p>
             </div>
             <div className="flex space-x-2">
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => setShowAlert(!showAlert)}
               >
                 <BellIcon className="mr-2 h-4 w-4" />
                 Notifications
               </Button>
-              <Button 
-                onClick={refreshReports}
-                disabled={loading}
-              >
+              <Button onClick={refreshReports} disabled={loading}>
                 {loading ? (
                   <>
                     <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
                     Refreshing
                   </>
                 ) : (
-                  'Refresh'
+                  "Refresh"
                 )}
               </Button>
             </div>
@@ -118,9 +121,9 @@ export default function Feed() {
 
                 <TabsContent value="all">
                   {reports.map((report, index) => (
-                    <DisasterReportCard 
-                      key={index} 
-                      {...report} 
+                    <DisasterReportCard
+                      key={index}
+                      {...report}
                       onShare={() => {}} // Add share functionality
                       onSave={() => {}} // Add save functionality
                     />
@@ -140,7 +143,9 @@ export default function Feed() {
                     <div className="space-y-4">
                       {updates.map((update, index) => (
                         <div key={index} className="border-b pb-2">
-                          <p className="text-sm font-medium">{update.message}</p>
+                          <p className="text-sm font-medium">
+                            {update.message}
+                          </p>
                           <span className="text-xs text-muted-foreground">
                             {new Date(update.timestamp).toLocaleTimeString()}
                           </span>
@@ -171,7 +176,7 @@ export default function Feed() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
 
 function DisasterReportCard({
@@ -183,7 +188,7 @@ function DisasterReportCard({
   isVerified,
   source,
   onShare,
-  onSave
+  onSave,
 }) {
   return (
     <Card className="mb-4">
@@ -192,15 +197,21 @@ function DisasterReportCard({
           <CardTitle className="flex items-center">
             {title}
             {isVerified && (
-              <Badge variant="success" className="ml-2">Verified</Badge>
+              <Badge variant="success" className="ml-2">
+                Verified
+              </Badge>
             )}
           </CardTitle>
           <div className="flex items-center space-x-2 mt-1">
-            <Badge variant={
-              severity === 'high' ? 'destructive' :
-                severity === 'medium' ? 'warning' :
-                  'default'
-            }>
+            <Badge
+              variant={
+                severity === "high"
+                  ? "destructive"
+                  : severity === "medium"
+                    ? "warning"
+                    : "default"
+              }
+            >
               {severity}
             </Badge>
             <span className="text-sm text-muted-foreground">{source}</span>
@@ -225,5 +236,5 @@ function DisasterReportCard({
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

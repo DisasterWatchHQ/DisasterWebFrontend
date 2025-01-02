@@ -6,20 +6,20 @@ const updates = [
     type: "Alert",
     title: "Flood Warning",
     description: "Rising water levels in coastal areas. Stay vigilant.",
-    severity: "high"
+    severity: "high",
   },
   {
     type: "Update",
     title: "Emergency Response",
     description: "Relief operations ongoing in affected areas.",
-    severity: "medium"
+    severity: "medium",
   },
   {
     type: "Guide",
     title: "Hurricane Preparedness",
     description: "Updated guidelines for hurricane season.",
-    severity: "info"
-  }
+    severity: "info",
+  },
 ];
 
 export default function RecentUpdates() {
@@ -31,11 +31,16 @@ export default function RecentUpdates() {
           {updates.map((update, index) => (
             <Card key={index}>
               <CardContent className="pt-6">
-                <Badge className="mb-4" variant={
-                  update.severity === "high" ? "destructive" : 
-                  update.severity === "medium" ? "default" : 
-                  "secondary"
-                }>
+                <Badge
+                  className="mb-4"
+                  variant={
+                    update.severity === "high"
+                      ? "destructive"
+                      : update.severity === "medium"
+                        ? "default"
+                        : "secondary"
+                  }
+                >
                   {update.type}
                 </Badge>
                 <h3 className="font-bold mb-2">{update.title}</h3>

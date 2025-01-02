@@ -1,20 +1,14 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { 
-  Github, 
-  Twitter, 
-  Facebook, 
-  Instagram,
-  Mail
-} from "lucide-react"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Github, Twitter, Facebook, Instagram, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
     <footer className="border-t bg-background">
-      <div className="container px-4 py-12 md:py-16 lg:py-20">
-        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+      <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
+        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4 items-start">
           {/* Company Info */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">DisasterWatch</h3>
@@ -50,22 +44,34 @@ export default function Footer() {
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/map" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/map"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Disaster Map
                 </Link>
               </li>
               <li>
-                <Link href="/feed" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/feed"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Live Feed
                 </Link>
               </li>
               <li>
-                <Link href="/guides" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/guides"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Safety Guides
                 </Link>
               </li>
               <li>
-                <Link href="/resources" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/resources"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Emergency Resources
                 </Link>
               </li>
@@ -77,22 +83,34 @@ export default function Footer() {
             <h3 className="text-lg font-semibold">Resources</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/about"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/contact"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/privacy"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-muted-foreground hover:text-primary">
+                <Link
+                  href="/terms"
+                  className="text-muted-foreground hover:text-primary"
+                >
                   Terms of Service
                 </Link>
               </li>
@@ -135,5 +153,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

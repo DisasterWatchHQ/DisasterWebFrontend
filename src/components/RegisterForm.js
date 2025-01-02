@@ -14,7 +14,9 @@ export default function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="block text-sm">Email</label>
+        <label htmlFor="email" className="block text-sm">
+          Email
+        </label>
         <input
           type="email"
           id="email"
@@ -25,7 +27,9 @@ export default function RegisterForm() {
         />
       </div>
       <div>
-        <label htmlFor="password" className="block text-sm">Password</label>
+        <label htmlFor="password" className="block text-sm">
+          Password
+        </label>
         <input
           type="password"
           id="password"
@@ -36,7 +40,9 @@ export default function RegisterForm() {
         />
       </div>
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm">Confirm Password</label>
+        <label htmlFor="confirmPassword" className="block text-sm">
+          Confirm Password
+        </label>
         <input
           type="password"
           id="confirmPassword"
@@ -46,7 +52,10 @@ export default function RegisterForm() {
           required
         />
       </div>
-      <button type="submit" className="bg-blue-600 text-white py-2 px-4 rounded w-full">
+      <button
+        type="submit"
+        className="bg-blue-600 text-white py-2 px-4 rounded w-full"
+      >
         Register
       </button>
     </form>

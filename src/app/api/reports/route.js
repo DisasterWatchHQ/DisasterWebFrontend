@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -22,8 +22,8 @@ export async function GET() {
     return NextResponse.json(reports);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch reports' },
-      { status: 500 }
+      { error: "Failed to fetch reports" },
+      { status: 500 },
     );
   }
 }
