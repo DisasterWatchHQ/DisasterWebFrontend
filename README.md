@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+```markdown
+# DisasterWebFrontend
 
-## Getting Started
+The web frontend of the DisasterWatch app.
 
-First, run the development server:
+## Description
+
+This repository contains the web frontend for the DisasterWatch app, a platform designed to provide real-time information and alerts about natural disasters.
+
+## Features
+
+- Real-time disaster alerts
+- Interactive maps
+- User profiles and resource pages
+- Theming and customization options
+
+## Project Structure
+
+- `components/`: React components used throughout the app
+- `pages/`: Next.js pages
+- `public/`: Static assets
+- `styles/`: CSS and Tailwind CSS styles
+
+## Installation
+
+To install the dependencies, run the following command:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- `dev`: Runs the app in development mode
+- `build`: Builds the app for production
+- `start`: Starts the production build of the app
+- `lint`: Lints the codebase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+You can run these scripts using:
 
-## Learn More
+```bash
+npm run <script>
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Dependencies
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The project uses several dependencies, including but not limited to:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `@googlemaps/react-wrapper`
+- `@hookform/resolvers`
+- `@radix-ui/react-*`
+- `next`
+- `react`
+- `tailwindcss`
+- `zod`
 
-## Deploy on Vercel
+For a complete list, refer to the [package.json](https://github.com/DisasterWatchHQ/DisasterWebFrontend/blob/main/package.json) file.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+We welcome contributions from the community. To contribute:
+
+1. Fork the repository.
+2. Create a new branch with a descriptive name.
+3. Make your changes.
+4. Submit a pull request.
+
+For detailed contribution guidelines, refer to [CONTRIBUTING.md](CONTRIBUTING.md) (if available).
+
+## Recent Changes
+
+Here are some of the recent notable commits:
+
+- [feat: updated the resource page with more functionality](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commit/a0f48a89f513e2565293252b4d2f7c6234b20d35)
+- [feat: updated the profile page with shadcn ui elements](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commit/e0524261931e6d70f184ade1c24fb65b5e567f43)
+- [feat: updated the guides page with shadcn ui elements](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commit/64c2023515afddb9faeda7ca060561775c67b76b)
+
+For more commits, visit the [commit history](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commits/main).
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+```
