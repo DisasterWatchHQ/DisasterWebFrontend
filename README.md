@@ -1,4 +1,3 @@
-```markdown
 # DisasterWebFrontend
 
 The web frontend of the DisasterWatch app.
@@ -80,4 +79,3 @@ For more commits, visit the [commit history](https://github.com/DisasterWatchHQ/
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-```
