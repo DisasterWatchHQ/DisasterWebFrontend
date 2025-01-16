@@ -21,7 +21,7 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     // Check authentication status on mount
     checkAuth();
-  });
+  }, []);
 
   const checkAuth = () => {
     try {
