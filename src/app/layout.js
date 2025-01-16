@@ -1,22 +1,19 @@
-import localFont from "next/font/local";
-// import { usePathname } from "next/navigation";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "../components/Header";
-import LayoutWrapper from "@/components/LayoutWrapper";
-import Footer from "@/components/Footer";
-import "leaflet/dist/leaflet.css";
+import Header from "../components/common/Header";
+import LayoutWrapper from "@/components/common/LayoutWrapper";
+import Footer from "@/components/common/Footer";
 import { ThemeProvider } from "next-themes";
-import { UserProvider } from "@/providers/UserContext";
+import { UserProvider } from "@/provider/UserContext";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
+const geistSans = Geist({
   variable: "--font-geist-sans",
-  weight: "100 900",
+  subsets: ["latin"],
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
+
+const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  weight: "100 900",
+  subsets: ["latin"],
 });
 
 export const metadata = {
@@ -41,7 +38,6 @@ export default function RootLayout({ children }) {
             disableTransitionOnChange
           >
             <LayoutWrapper header={header} footer={footer}>
-              {/* Main Content */}
               <main className="flex-grow container min-w-full">{children}</main>
             </LayoutWrapper>
           </ThemeProvider>
