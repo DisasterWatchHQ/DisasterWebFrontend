@@ -133,8 +133,20 @@ export default function DisasterFeed() {
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex space-x-4 px-4">
               {activeWarnings.map((warning, index) => (
-                <Badge key={index} variant="warning" className="animate-pulse">
-                  {warning.message}
+                <Badge
+                  key={index}
+                  variant="warning"
+                  className="animate-pulse flex items-center gap-2"
+                >
+                  <span className="font-bold">
+                    {warning.disaster_category.toUpperCase()}:
+                  </span>
+                  <span>{warning.title}</span>
+                  {warning.severity && (
+                    <span className="ml-2 px-1 py-0.5 text-xs bg-warning-foreground/10 rounded">
+                      {warning.severity}
+                    </span>
+                  )}
                 </Badge>
               ))}
             </div>
@@ -306,7 +318,7 @@ export default function DisasterFeed() {
                     ))
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="verified" className="space-y-4">
                   {loading ? (
                     <div className="text-center p-4">
