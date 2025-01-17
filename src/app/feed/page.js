@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useReports } from "@/hooks/useReports";
+import { useLiveUpdates } from "@/hooks/useLiveUpdates";
+import axios from "axios";
+
+// shadcn components
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardHeader,
@@ -10,12 +15,8 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ReloadIcon, BellIcon, FilterIcon } from "@radix-ui/react-icons";
-import { useToast } from "@/hooks/use-toast";
-import { Toaster } from "@/components/ui/toaster";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,23 +26,104 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Twitter as TwitterIcon,
+  Facebook as FacebookIcon,
+  Share2 as WhatsappIcon,
+} from "lucide-react";
 
-export default function Feed() {
-  const { toast } = useToast();
-  const { reports, loading, error, refreshReports } = useReports();
-  const [activeWarnings, setActiveWarnings] = useState([]);
-  const [updates, setUpdates] = useState([]);
+// icons
+import {
+  Bell as BellIcon,
+  Loader2 as ReloadIcon,
+  Share as ShareIcon,
+} from "lucide-react";
+
+export default function DisasterFeed() {
+  const { reports, loading, error, filters, updateFilters, refreshReports } =
+    useReports();
+  const { updates, activeWarnings } = useLiveUpdates();
   const [showAlert, setShowAlert] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState("all");
+  const { toast } = useToast();
 
-  // Simulated real-time updates
-  useEffect(() => {
-    // Websocket connection would go here
-    const interval = setInterval(() => {
-      // Simulate new updates
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const handleShare = async (reportId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/userReport/share/${reportId}`,
+      );
+      const shareData = response.data.data;
+
+      if (navigator.share) {
+        await navigator.share({
+          title: shareData.title,
+          text: shareData.description,
+          url: shareData.shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareData.shareUrl);
+        toast({
+          title: "Link copied to clipboard",
+          description: "You can now share this report with others",
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing report:", error);
+      toast({
+        title: "Error sharing report",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredReports = (showVerifiedOnly) => {
+    return reports.filter(
+      (report) =>
+        !showVerifiedOnly || report.verification_status === "verified",
+    );
+  };
+
+  const handleFilterChange = (type, value) => {
+    updateFilters({ [type]: value, page: 1 });
+  };
+
+  if (error) {
+    return (
+      <div className="p-4 text-center text-destructive">
+        Error loading reports: {error}
+      </div>
+    );
+  }
+
+  const handleSocialShare = (report, platform) => {
+    const shareText = `${report.title} - ${report.description}`;
+    const shareUrl = window.location.href; // or your specific report URL
+
+    switch (platform) {
+      case "twitter":
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+          "_blank",
+        );
+        break;
+      case "facebook":
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+          "_blank",
+        );
+        break;
+      case "whatsapp":
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+          "_blank",
+        );
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -61,9 +143,9 @@ export default function Feed() {
       )}
 
       <main className="w-full h-full p-6">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto space-y-6">
           {/* Header Section */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
                 Disaster Feed
@@ -82,10 +164,7 @@ export default function Feed() {
               </Button>
               <Button onClick={refreshReports} disabled={loading}>
                 {loading ? (
-                  <>
-                    <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
-                    Refreshing
-                  </>
+                  <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   "Refresh"
                 )}
@@ -96,65 +175,226 @@ export default function Feed() {
           {/* Main Content */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Reports Feed */}
-            <div className="md:col-span-2">
-              <Tabs defaultValue="all">
+            <div className="md:col-span-3">
+              <Tabs
+                defaultValue="all"
+                onValueChange={(value) =>
+                  handleFilterChange("verified_only", value === "verified")
+                }
+              >
                 <TabsList>
                   <TabsTrigger value="all">All Reports</TabsTrigger>
                   <TabsTrigger value="verified">Verified Only</TabsTrigger>
-                  <TabsTrigger value="nearby">Nearby</TabsTrigger>
                 </TabsList>
 
                 <div className="mb-4 mt-2">
                   <div className="flex space-x-2">
-                    <Badge variant="outline" className="cursor-pointer">
-                      Floods
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer">
-                      Fires
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer">
-                      Earthquakes
-                    </Badge>
-                    {/* Add more disaster type filters */}
+                    {[
+                      "flood",
+                      "fire",
+                      "earthquake",
+                      "landslide",
+                      "cyclone",
+                    ].map((category) => (
+                      <Badge
+                        key={category}
+                        variant={
+                          filters.disaster_category === category
+                            ? "default"
+                            : "outline"
+                        }
+                        className="cursor-pointer"
+                        onClick={() =>
+                          handleFilterChange(
+                            "disaster_category",
+                            filters.disaster_category === category
+                              ? ""
+                              : category,
+                          )
+                        }
+                      >
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
 
-                <TabsContent value="all">
-                  {reports.map((report, index) => (
-                    <DisasterReportCard
-                      key={index}
-                      {...report}
-                      onShare={() => {}} // Add share functionality
-                      onSave={() => {}} // Add save functionality
-                    />
-                  ))}
+                <TabsContent value="all" className="space-y-4">
+                  {loading ? (
+                    <div className="text-center p-4">
+                      <ReloadIcon className="animate-spin h-6 w-6 mx-auto" />
+                    </div>
+                  ) : (
+                    filteredReports(false).map((report) => (
+                      <Card key={report.id}>
+                        <CardHeader>
+                          <CardTitle className="flex justify-between">
+                            {report.title}
+                            {report.verification_status !== "dismissed" && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSocialShare(report, "twitter")
+                                  }
+                                >
+                                  <TwitterIcon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSocialShare(report, "facebook")
+                                  }
+                                >
+                                  <FacebookIcon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSocialShare(report, "whatsapp")
+                                  }
+                                >
+                                  <WhatsappIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p>{report.description}</p>
+                          <div className="flex gap-2 mt-4">
+                            <Badge>{report.disaster_category}</Badge>
+                            <Badge
+                              variant={
+                                report.verification_status === "verified"
+                                  ? "default"
+                                  : report.verification_status === "dismissed"
+                                    ? "destructive"
+                                    : "outline"
+                              }
+                            >
+                              {report.verification_status}
+                            </Badge>
+                            {report.severity && (
+                              <Badge
+                                variant={
+                                  report.severity === "critical"
+                                    ? "destructive"
+                                    : report.severity === "high"
+                                      ? "warning"
+                                      : "default"
+                                }
+                              >
+                                {report.severity}
+                              </Badge>
+                            )}
+                          </div>
+                          {report.verification_status === "dismissed" && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              This report has been dismissed and cannot be
+                              shared.
+                            </p>
+                          )}
+                        </CardContent>
+                        <CardFooter className="text-sm text-muted-foreground">
+                          {new Date(report.timestamp).toLocaleString()}
+                        </CardFooter>
+                      </Card>
+                    ))
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="verified" className="space-y-4">
+                  {loading ? (
+                    <div className="text-center p-4">
+                      <ReloadIcon className="animate-spin h-6 w-6 mx-auto" />
+                    </div>
+                  ) : (
+                    filteredReports(true).map((report) => (
+                      <Card key={report.id}>
+                        <CardHeader>
+                          <CardTitle className="flex justify-between">
+                            {report.title}
+                            {report.verification_status !== "dismissed" && (
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSocialShare(report, "twitter")
+                                  }
+                                >
+                                  <TwitterIcon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSocialShare(report, "facebook")
+                                  }
+                                >
+                                  <FacebookIcon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleSocialShare(report, "whatsapp")
+                                  }
+                                >
+                                  <WhatsappIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p>{report.description}</p>
+                          <div className="flex gap-2 mt-4">
+                            <Badge>{report.disaster_category}</Badge>
+                            <Badge
+                              variant={
+                                report.verification_status === "verified"
+                                  ? "default"
+                                  : report.verification_status === "dismissed"
+                                    ? "destructive"
+                                    : "outline"
+                              }
+                            >
+                              {report.verification_status}
+                            </Badge>
+                            {report.severity && (
+                              <Badge
+                                variant={
+                                  report.severity === "critical"
+                                    ? "destructive"
+                                    : report.severity === "high"
+                                      ? "warning"
+                                      : "default"
+                                }
+                              >
+                                {report.severity}
+                              </Badge>
+                            )}
+                          </div>
+                          {report.verification_status === "dismissed" && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              This report has been dismissed and cannot be
+                              shared.
+                            </p>
+                          )}
+                        </CardContent>
+                        <CardFooter className="text-sm text-muted-foreground">
+                          {new Date(report.timestamp).toLocaleString()}
+                        </CardFooter>
+                      </Card>
+                    ))
+                  )}
                 </TabsContent>
               </Tabs>
-            </div>
-
-            {/* Live Updates Chat */}
-            <div className="hidden md:block">
-              <Card className="h-[calc(100vh-200px)]">
-                <CardHeader>
-                  <CardTitle className="text-lg">Live Updates</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[calc(100vh-300px)]">
-                    <div className="space-y-4">
-                      {updates.map((update, index) => (
-                        <div key={index} className="border-b pb-2">
-                          <p className="text-sm font-medium">
-                            {update.message}
-                          </p>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(update.timestamp).toLocaleTimeString()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>
@@ -169,72 +409,13 @@ export default function Feed() {
               Choose which types of alerts you want to receive.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {/* Add notification settings options */}
           <AlertDialogFooter>
             <AlertDialogAction>Save</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
-}
 
-function DisasterReportCard({
-  title,
-  description,
-  date,
-  location,
-  severity,
-  isVerified,
-  source,
-  onShare,
-  onSave,
-}) {
-  return (
-    <Card className="mb-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="flex items-center">
-            {title}
-            {isVerified && (
-              <Badge variant="success" className="ml-2">
-                Verified
-              </Badge>
-            )}
-          </CardTitle>
-          <div className="flex items-center space-x-2 mt-1">
-            <Badge
-              variant={
-                severity === "high"
-                  ? "destructive"
-                  : severity === "medium"
-                    ? "warning"
-                    : "default"
-              }
-            >
-              {severity}
-            </Badge>
-            <span className="text-sm text-muted-foreground">{source}</span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground">{description}</p>
-      </CardContent>
-      <CardFooter className="flex justify-between items-center">
-        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-          <span>{location}</span>
-          <span>{new Date(date).toLocaleString()}</span>
-        </div>
-        <div className="flex space-x-2">
-          <Button variant="ghost" size="sm" onClick={onShare}>
-            Share
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onSave}>
-            Save
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
+      <Toaster />
+    </div>
   );
 }
