@@ -27,7 +27,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-
+import axios from 'axios';
+import { WarningActions } from "@/components/warning/WarningActions";
 import CreateWarningDialog  from "@/components/report/CreateWarningDialog";
 
 const AdminDashboard = () => {
@@ -38,6 +39,7 @@ const AdminDashboard = () => {
     avgVerificationTime: 0,
   });
   const [pendingReports, setPendingReports] = useState([]);
+  const [activeWarnings, setActiveWarnings] = useState([]);
   const [analyticsData, setAnalyticsData] = useState({
     weeklyTrends: [],
     reportTypes: [],
@@ -66,6 +68,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchActiveWarnings = async () => {
+    try {
+      const response = await api.get("/warning/active");
+      setActiveWarnings(response.data.data);
+    } catch (error) {
+      console.error("Error fetching active warnings:", error);
+    }
+  };
+  
   const fetchPendingReports = async () => {
     try {
       const response = await api.get("/userReport/public", {
@@ -146,40 +157,31 @@ const AdminDashboard = () => {
   const fetchReportAnalytics = async () => {
     try {
       const response = await api.get("/userReport/stats/analytics");
-
+      
+      // Ensure reportTypes has the correct structure
+      const reportTypes = response.data.reportTypes.map(type => ({
+        name: type.name || "Unknown",
+        value: type.value || 0
+      }));
+  
       // Format weekly trends data
-      const trendsMap = response.data.weeklyTrends.reduce((acc, item) => {
-        const date = item._id.date;
-        if (!acc[date]) {
-          acc[date] = { date };
-        }
-        acc[date][item._id.status] = item.count;
-        return acc;
-      }, {});
-
-      const formattedTrends = Object.values(trendsMap).map((item) => ({
-        date: item.date,
-        verified: item.verified || 0,
-        pending: item.pending || 0,
-        dismissed: item.dismissed || 0,
+      const formattedTrends = response.data.weeklyTrends.map(trend => ({
+        date: trend.date,
+        verified: trend.verified || 0,
+        pending: trend.pending || 0,
+        dismissed: trend.dismissed || 0
       }));
-
-      // Format report types data
-      const reportTypes = response.data.reportTypes.map((type) => ({
-        name: type._id.charAt(0).toUpperCase() + type._id.slice(1),
-        value: type.count,
-      }));
-
+  
       // Format response time data
-      const responseTime = response.data.responseTime.map((item) => ({
-        time: `${Math.round(item.avgTime)}h`,
-        count: Math.round(item.avgTime),
+      const responseTime = response.data.responseTime.map(item => ({
+        time: item.time,
+        count: item.count
       }));
-
+  
       setAnalyticsData({
         weeklyTrends: formattedTrends,
-        reportTypes,
-        responseTime,
+        reportTypes: reportTypes,
+        responseTime: responseTime
       });
     } catch (error) {
       console.error("Error fetching report analytics:", error);
@@ -187,6 +189,7 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
+    fetchActiveWarnings();
     fetchVerificationStats();
     fetchReportStats();
     fetchReportAnalytics();
@@ -361,6 +364,45 @@ const AdminDashboard = () => {
         open={isWarningDialogOpen}
         onOpenChange={setIsWarningDialogOpen}
       />
+      <Card>
+        <CardHeader>
+          <CardTitle>Active Warnings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {activeWarnings.map((warning) => (
+              <div
+                key={warning._id}
+                className="flex items-center justify-between p-4 border rounded"
+              >
+                <div className="space-y-1">
+                  <div className="font-medium">{warning.title}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {warning.disaster_category} - Severity: {warning.severity}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Created: {new Date(warning.created_at).toLocaleString()}
+                  </div>
+                  {warning.updates.length > 0 && (
+                    <div className="text-sm text-muted-foreground">
+                      Last update: {warning.updates[warning.updates.length - 1].update_text}
+                    </div>
+                  )}
+                </div>
+                <WarningActions
+                  warning={warning}
+                  onUpdate={() => fetchActiveWarnings()}
+                />
+              </div>
+            ))}
+            {activeWarnings.length === 0 && (
+              <div className="text-center py-4 text-muted-foreground">
+                No active warnings
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Analytics Section */}
       <Tabs defaultValue="trends" className="space-y-4">
