@@ -7,21 +7,34 @@ export const useLiveUpdates = () => {
 
   const fetchUpdates = async () => {
     try {
-      // Using the new /updates endpoint
-      const response = await axios.get('http://localhost:5000/api/userReport/updates', {
+      // Fetch reports updates
+      const updatesResponse = await axios.get('http://localhost:5000/api/userReport/updates', {
         params: {
           verified_only: true,
           limit: 5
         }
       });
-
-      setActiveWarnings(response.data.data.activeWarnings || []);
-      setUpdates(response.data.data.updates.map(update => ({
+      
+      setUpdates(updatesResponse.data.data.updates.map(update => ({
         message: `${update.title} - ${update.location}`,
         timestamp: update.date
       })));
+
+      // Fetch active warnings separately
+      const warningsResponse = await axios.get('http://localhost:5000/api/warning/active');
+      if (warningsResponse.data.success) {
+        setActiveWarnings(warningsResponse.data.data.map(warning => ({
+          id: warning._id,
+          title: warning.title,
+          message: warning.title,
+          disaster_category: warning.disaster_category,
+          severity: warning.severity,
+          locations: warning.affected_locations,
+          timestamp: warning.created_at
+        })));
+      }
     } catch (error) {
-      console.error('Error fetching updates:', error);
+      console.error('Error fetching updates and warnings:', error);
     }
   };
 
