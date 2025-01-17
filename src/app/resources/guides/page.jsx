@@ -19,7 +19,7 @@ export default function GuidesPage() {
   useEffect(() => {
     const fetchGuides = async () => {
       const response = await fetch(
-        `/api/resources/guides${selectedType !== 'all' ? `?type=${selectedType}` : ''}`
+        `http://localhost:5000/api/resources/guides${selectedType !== 'all' ? `?type=${selectedType}` : ''}`
       );
       const data = await response.json();
       setGuides(data.resources);
@@ -53,7 +53,7 @@ export default function GuidesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {guides.map((guide) => (
-          <Card key={guide._id} className="hover:shadow-lg transition-shadow">
+          <Card key={guide.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle>{guide.name}</CardTitle>
               <div className="flex gap-2">
