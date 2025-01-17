@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -32,23 +32,35 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { MapPicker } from "@/components/report/MapSelection";
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
-  disaster_category: z.enum(["flood", "fire", "earthquake", "landslide", "cyclone"]),
   description: z.string().min(20, "Description must be at least 20 characters"),
+  disaster_category: z.enum([
+    "flood",
+    "fire",
+    "earthquake",
+    "landslide",
+    "cyclone",
+  ]),
   severity: z.enum(["low", "medium", "high", "critical"]),
-  affected_locations: z.array(
-    z.object({
-      address: z.object({
-        city: z.string().min(1, "City is required"),
-        district: z.string().min(1, "District is required"),
-        province: z.string().min(1, "Province is required"),
-        details: z.string().optional(),
+  affected_locations: z
+    .array(
+      z.object({
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
+        address: z.object({
+          city: z.string().min(1, "City is required"),
+          district: z.string().min(1, "District is required"),
+          province: z.string().min(1, "Province is required"),
+          details: z.string().optional(),
+        }),
       }),
-    })
-  ).min(1, "At least one location must be specified"),
+    )
+    .min(1, "At least one location must be specified"),
   expected_duration: z.object({
+    start_time: z.string().optional(), // Made optional since it defaults to current time
     end_time: z.string().optional(),
   }),
   images: z.array(z.string().url()).optional(),
@@ -57,7 +69,17 @@ const formSchema = z.object({
 const CreateWarningDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const { toast } = useToast();
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken);
+    const userInfo = JSON.parse(localStorage.getItem("user"));
+    setUser(userInfo);
+  }, []);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -68,6 +90,8 @@ const CreateWarningDialog = () => {
       severity: undefined,
       affected_locations: [
         {
+          latitude: null,
+          longitude: null,
           address: {
             city: "",
             district: "",
@@ -77,6 +101,7 @@ const CreateWarningDialog = () => {
         },
       ],
       expected_duration: {
+        start_time: new Date().toISOString(),
         end_time: "",
       },
       images: [],
@@ -86,20 +111,52 @@ const CreateWarningDialog = () => {
   async function onSubmit(data) {
     try {
       setIsSubmitting(true);
+      if (!user || !user.id) {
+        toast({
+          title: "Error",
+          description: "User information not found. Please log in again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      const response = await fetch("http://localhost:5000/api/warnings", {
+      const formattedData = {
+        ...data,
+        created_by: user.id, // Explicitly include user ID
+        expected_duration: {
+          start_time: new Date(data.expected_duration.start_time),
+          end_time: data.expected_duration.end_time
+            ? new Date(data.expected_duration.end_time)
+            : undefined,
+        },
+        affected_locations: data.affected_locations.map((location) => ({
+          latitude: location.latitude || null,
+          longitude: location.longitude || null,
+          address: {
+            city: location.address.city,
+            district: location.address.district,
+            province: location.address.province,
+            details: location.address.details || "",
+          },
+        })),
+      };
+
+      const response = await fetch("http://localhost:5000/api/warning/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Add your auth headers here
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formattedData),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create warning");
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+        throw new Error(errorData.error || "Failed to create warning");
       }
-
+      const responseData = await response.json();
+      
       toast({
         title: "Success",
         description: "Warning has been created successfully.",
@@ -130,7 +187,7 @@ const CreateWarningDialog = () => {
             Create a new warning for an ongoing or imminent disaster situation.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -157,7 +214,10 @@ const CreateWarningDialog = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Disaster Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -182,7 +242,10 @@ const CreateWarningDialog = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Severity Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select severity" />
@@ -198,6 +261,15 @@ const CreateWarningDialog = () => {
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+              <MapPicker
+                onLocationSelect={(location) => {
+                  form.setValue("affected_locations.0", {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    address: location.address,
+                  });
+                }}
               />
             </div>
 
@@ -307,11 +379,17 @@ const CreateWarningDialog = () => {
             />
 
             <div className="flex justify-end space-x-4 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Create Warning
               </Button>
             </div>
