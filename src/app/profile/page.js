@@ -48,8 +48,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 // import { useUser } from "../../providers/UserContext";
-import { getUserProfile, updateUser, deleteUser } from "@/utils/apiUser";
-import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
+// import { getUserProfile, updateUser, deleteUser } from "@/utils/apiUser";
+// import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
