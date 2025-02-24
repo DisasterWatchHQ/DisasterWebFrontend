@@ -48,8 +48,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 // import { useUser } from "../../providers/UserContext";
-import { getUserProfile, updateUser, deleteUser } from "@/utils/apiUser";
-import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
+// import { getUserProfile, updateUser, deleteUser } from "@/utils/apiUser";
+// import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -455,7 +455,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <ChangePasswordDialog />
+                {/* <ChangePasswordDialog /> */}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
