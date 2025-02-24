@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SignInForm } from "@/components/auth/Sign-In-Form";
@@ -7,11 +8,18 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, LogInIcon, UserPlusIcon } from "lucide-react";
-import { SiFacebook, SiGoogle } from "react-icons/si";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PasswordResetForm } from "@/components/auth/PasswordResetForm";
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState("signin");
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const handleSignUpSuccess = () => {
     setActiveTab("signin");
@@ -20,9 +28,24 @@ export default function AuthPage() {
   return (
     <>
       <Toaster position="top-center" expand={false} richColors />
+
+      {/* Password Reset Dialog */}
+      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+          </DialogHeader>
+          <PasswordResetForm onClose={() => setIsResetDialogOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
       <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
         {/* Left Side - Branding Section */}
-        <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
+        <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex" style={{
+            backgroundImage: "url('/bg1.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}>
           <div className="absolute inset-0 bg-zinc-900 opacity-80" />
           <div className="relative z-20 flex items-center text-lg font-medium">
             <Link
@@ -56,15 +79,14 @@ export default function AuthPage() {
               </p>
             </blockquote>
             <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                className="text-white border-white/50 hover:bg-white/10"
-              >
-                Learn More
-              </Button>
-              <Button className="bg-primary-foreground text-primary hover:bg-primary/90">
-                Get Started
-              </Button>
+              <Link href="/">
+                <Button
+                  variant="outline"
+                  className="text-white border-white/50 hover:bg-white/10"
+                >
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -110,39 +132,16 @@ export default function AuthPage() {
                   <SignUpForm onSignUpSuccess={handleSignUpSuccess} />
                 </TabsContent>
               </Tabs>
-
-              {/* Social Login Options */}
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" className="w-full">
-                  <SiFacebook className="mr-2 h-4 w-4" />
-                  Facebook
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <SiGoogle className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-              </div>
             </Card>
 
             {/* Additional Links */}
             <div className="text-center text-sm text-muted-foreground">
-              <Link
-                href="/forgot-password"
+              <button
+                onClick={() => setIsResetDialogOpen(true)}
                 className="underline hover:text-primary"
               >
                 Forgot your password?
-              </Link>
+              </button>
             </div>
           </div>
         </div>
