@@ -5,6 +5,7 @@ import LayoutWrapper from "@/components/common/LayoutWrapper";
 import Footer from "@/components/common/Footer";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/provider/UserContext";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({ children }) {
               <main className="flex-grow container min-w-full">{children}</main>
             </LayoutWrapper>
           </ThemeProvider>
+          <Toaster />
         </UserProvider>
       </body>
     </html>

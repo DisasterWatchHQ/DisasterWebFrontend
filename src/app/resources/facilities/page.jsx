@@ -30,7 +30,7 @@ export default function FacilitiesPage() {
       }
       
       const response = await fetch(
-        `/api/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+        `http://localhost:5000/api/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
       );
       const data = await response.json();
       setFacilities(data.resources);
@@ -85,7 +85,7 @@ export default function FacilitiesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {facilities.map((facility) => (
-          <Card key={facility._id} className="hover:shadow-lg transition-shadow">
+          <Card key={facility.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
@@ -110,8 +110,15 @@ export default function FacilitiesPage() {
                   <p>Capacity: {facility.capacity}</p>
                 )}
                 {facility.operating_hours && (
-                  <p>Hours: {facility.operating_hours}</p>
+                  <div>
+                    {Object.entries(facility.operating_hours).map(([day, hours]) => (
+                      <p key={day}>
+                        {day}: {hours.open} - {hours.close} {hours.is24Hours ? "(24 Hours)" : ""}
+                      </p>
+                    ))}
+                  </div>
                 )}
+
               </div>
             </CardContent>
           </Card>
