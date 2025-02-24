@@ -455,7 +455,7 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <ChangePasswordDialog />
+                {/* <ChangePasswordDialog /> */}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
