@@ -137,7 +137,7 @@ export default function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            © 2024 DisasterWatch. All rights reserved.
+            © 2025 DisasterWatch. All rights reserved.
           </p>
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             <Link href="/privacy" className="hover:text-primary">
