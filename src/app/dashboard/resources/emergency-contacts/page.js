@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, Plus } from "lucide-react";
+import { Pencil, Trash2, Phone, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function EmergencyContactsPage() {
   const { toast } = useToast();
@@ -42,6 +53,7 @@ export default function EmergencyContactsPage() {
     tags: [],
     status: "active",
   });
+  const [editingContact, setEditingContact] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -93,8 +105,14 @@ export default function EmergencyContactsPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/resources", {
-        method: "POST",
+      const url = editingContact
+        ? `http://localhost:5000/api/resources/${editingContact.id}`
+        : "http://localhost:5000/api/resources";
+
+      const method = editingContact ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -105,7 +123,7 @@ export default function EmergencyContactsPage() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Emergency contact created successfully",
+          description: `Emergency contact ${editingContact ? "updated" : "created"} successfully`,
         });
         setIsDialogOpen(false);
         resetForm();
@@ -118,6 +136,52 @@ export default function EmergencyContactsPage() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDelete = async (contactId) => {
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Please login to delete contacts",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/resources/${contactId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Contact deleted successfully",
+        });
+        fetchContacts();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (contact) => {
+    setEditingContact(contact);
+    setFormData({
+      ...contact,
+      tags: contact.tags || [],
+    });
+    setIsDialogOpen(true);
   };
 
   const resetForm = () => {
@@ -136,6 +200,7 @@ export default function EmergencyContactsPage() {
       tags: [],
       status: "active",
     });
+    setEditingContact(null);
   };
 
   return (
@@ -157,7 +222,9 @@ export default function EmergencyContactsPage() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Emergency Contact</DialogTitle>
+              <DialogTitle>
+                {editingContact ? "Edit Contact" : "Add Emergency Contact"}
+              </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
@@ -257,12 +324,48 @@ export default function EmergencyContactsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {contacts.map((contact) => (
-          <Card key={contact._id} className="hover:shadow-lg transition-shadow">
+          <Card key={contact.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5" />
-                {contact.name}
-              </CardTitle>
+              <div className="flex justify-between items-start">
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="h-5 w-5" />
+                  {contact.name}
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(contact)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Contact</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this contact? This
+                          action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(contact.id)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
               <Badge
                 variant={
                   contact.emergency_level === "high"
