@@ -39,6 +39,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function GuidesPage() {
   const { toast } = useToast();
@@ -47,6 +49,7 @@ export default function GuidesPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGuide, setEditingGuide] = useState(null);
+  const [selectedGuide, setSelectedGuide] = useState(null);
   const [token, setToken] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -252,6 +255,35 @@ export default function GuidesPage() {
       guide.description.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  const GuideDetailDialog = ({ guide, open, onClose }) => {
+    if (!guide) return null;
+
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{guide.name}</DialogTitle>
+            <div className="flex gap-2 mt-2">
+              {guide.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-muted-foreground">{guide.description}</p>
+            <article className="prose prose-slate dark:prose-invert max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {guide.content}
+              </ReactMarkdown>
+            </article>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -401,7 +433,11 @@ export default function GuidesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredGuides.map((guide) => (
-          <Card key={guide._id} className="hover:shadow-lg transition-shadow">
+          <Card
+            key={guide.id}
+            className="hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => setSelectedGuide(guide)}
+          >
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle>{guide.name}</CardTitle>
@@ -409,13 +445,20 @@ export default function GuidesPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleEdit(guide)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(guide);
+                    }}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </AlertDialogTrigger>
@@ -450,10 +493,6 @@ export default function GuidesPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">{guide.description}</p>
-              <div
-                className="prose dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: guide.content }}
-              />
             </CardContent>
             <CardFooter className="text-sm text-muted-foreground">
               Last updated:{" "}
@@ -462,6 +501,11 @@ export default function GuidesPage() {
           </Card>
         ))}
       </div>
+      <GuideDetailDialog
+        guide={selectedGuide}
+        open={!!selectedGuide}
+        onClose={() => setSelectedGuide(null)}
+      />
     </div>
   );
 }
