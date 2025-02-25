@@ -51,6 +51,15 @@ export default function EmergencyContactsPage() {
                 {contact.description && (
                   <p className="text-muted-foreground">{contact.description}</p>
                 )}
+                {contact.tags && contact.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {contact.tags.map((tag, index) => (
+                      <Badge key={index} variant="outline">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

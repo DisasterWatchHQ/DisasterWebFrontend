@@ -19,18 +19,23 @@ export const useLiveUpdates = () => {
         message: `${update.title} - ${update.location}`,
         timestamp: update.date
       })));
-
-      // Fetch active warnings separately
+      
+      // Fetch active warnings with all needed fields
       const warningsResponse = await axios.get('http://localhost:5000/api/warning/active');
       if (warningsResponse.data.success) {
         setActiveWarnings(warningsResponse.data.data.map(warning => ({
           id: warning._id,
           title: warning.title,
-          message: warning.title,
+          description: warning.description,
           disaster_category: warning.disaster_category,
           severity: warning.severity,
-          locations: warning.affected_locations,
-          timestamp: warning.created_at
+          affected_locations: warning.affected_locations,
+          status: warning.status,
+          created_at: warning.created_at,
+          expected_duration: warning.expected_duration,
+          updates: warning.updates,
+          created_by: warning.created_by,
+          response_actions: warning.response_actions
         })));
       }
     } catch (error) {

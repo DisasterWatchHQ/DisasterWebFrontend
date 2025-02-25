@@ -58,7 +58,7 @@ export default function FacilitiesPage() {
     },
     location: {
       type: "point",
-      coordinates: ["", ""],
+      coordinates: [0, 0],
       address: {
         formatted_address: "",
         city: "",
@@ -69,7 +69,7 @@ export default function FacilitiesPage() {
     },
     availability_status: "open",
     metadata: {
-      capacity: 0
+      capacity: 0,
     },
     // Add capacity at the root level for shelter type
     capacity: 0,
@@ -130,16 +130,24 @@ export default function FacilitiesPage() {
       return;
     }
 
+    const longitude = Number(formData.location.coordinates[0]);
+    const latitude = Number(formData.location.coordinates[1]);
+
+    if (isNaN(longitude) || isNaN(latitude)) {
+      toast({
+        title: "Error",
+        description: "Invalid coordinates",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const requestBody = {
         ...formData,
         location: {
           type: "point",
-          // Ensure coordinates are numbers and in [longitude, latitude] format
-          coordinates: [
-            Number(formData.location.coordinates[0]),
-            Number(formData.location.coordinates[1]),
-          ],
+          coordinates: [longitude, latitude],
           address: formData.location.address,
         },
         // Set capacity in the proper location
@@ -192,9 +200,13 @@ export default function FacilitiesPage() {
   const handleDelete = async (facilityId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/resources/facilities/${facilityId}`,
+        `http://localhost:5000/api/resources/${facilityId}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
       );
 
@@ -231,7 +243,7 @@ export default function FacilitiesPage() {
       },
       location: {
         type: "point",
-        coordinates: ["", ""],
+        coordinates: [0, 0],
         address: {
           formatted_address: "",
           city: "",
@@ -344,6 +356,10 @@ export default function FacilitiesPage() {
                   <h3 className="text-lg font-medium">Location</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <Input
+                      type="number"
+                      step="any"
+                      min="-180"
+                      max="180"
                       placeholder="Longitude"
                       value={formData.location.coordinates[0]}
                       onChange={(e) =>
@@ -361,6 +377,10 @@ export default function FacilitiesPage() {
                       required
                     />
                     <Input
+                      type="number"
+                      step="any"
+                      min="-90"
+                      max="90"
                       placeholder="Latitude"
                       value={formData.location.coordinates[1]}
                       onChange={(e) =>
@@ -477,8 +497,8 @@ export default function FacilitiesPage() {
                         capacity: value,
                         metadata: {
                           ...formData.metadata,
-                          capacity: value
-                        }
+                          capacity: value,
+                        },
                       });
                     }}
                     min="0"
@@ -561,7 +581,7 @@ export default function FacilitiesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {facilities.map((facility) => (
-          <Card key={facility._id}>
+          <Card key={facility.id}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xl font-bold">
                 {facility.name}
@@ -591,7 +611,7 @@ export default function FacilitiesPage() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => handleDelete(facility._id)}
+                        onClick={() => handleDelete(facility.id)}
                         className="bg-red-500 hover:bg-red-600"
                       >
                         Delete
