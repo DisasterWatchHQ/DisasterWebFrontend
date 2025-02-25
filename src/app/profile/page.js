@@ -58,6 +58,7 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState(null);
+  const [isChangePassword,setIsChangePasswordOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
