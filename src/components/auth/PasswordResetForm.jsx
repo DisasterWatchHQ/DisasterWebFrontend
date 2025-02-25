@@ -10,6 +10,8 @@ export function PasswordResetForm({ onClose }) {
     email: "",
     username: "",
     lastPassword: "",
+    currentPassword:"",
+
   });
 
   const handleSubmit = async (e) => {
@@ -63,14 +65,40 @@ export function PasswordResetForm({ onClose }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="lastPassword">Last Remembered Password</Label>
+        <Label htmlFor="currentPassword">Current Password</Label>
         <Input
-          id="lastPassword"
+          id="currentPassword"
           type="password"
-          placeholder="Enter your last remembered password"
-          value={formData.lastPassword}
+          placeholder="Enter your current password"
+          value={formData.currentPassword}
           onChange={(e) =>
-            setFormData({ ...formData, lastPassword: e.target.value })
+            setFormData({ ...formData, currentPassword: e.target.value })
+          }
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="newPassword">New Password</Label>
+        <Input
+          id="newPassword"
+          type="password"
+          placeholder="Enter your New password"
+          value={formData.newPassword}
+          onChange={(e) =>
+            setFormData({ ...formData, newPassword: e.target.value })
+          }
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+        <Input
+          id="confirmNewPassword"
+          type="password"
+          placeholder="Confirm your new password"
+          value={formData.confirmNewPassword}
+          onChange={(e) =>
+            setFormData({ ...formData, confirmNewPassword: e.target.value })
           }
           required
         />
