@@ -52,6 +52,7 @@ import {
 // import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ChangePassword } from "@/components/common/ChangePassword";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -455,7 +456,15 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                {/* <ChangePasswordDialog /> */}
+                <Button  
+                  variant="outline"
+                  onClick={() => setIsChangePasswordOpen(true)}
+                  className="w-full">
+                    Change Password
+                  </Button>
+                  {isChangePassword && (
+                    <ChangePassword onClose={() => setIsChangePasswordOpen(false)} />
+                  )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
