@@ -33,8 +33,7 @@ import {
   Facebook as FacebookIcon,
   Share2 as WhatsappIcon,
 } from "lucide-react";
-
-// icons
+import { WarningDetailDialog } from "@/components/warning/WarningDetailDialog";
 import {
   Bell as BellIcon,
   Loader2 as ReloadIcon,
@@ -47,6 +46,7 @@ export default function DisasterFeed() {
   const { updates, activeWarnings } = useLiveUpdates();
   const [showAlert, setShowAlert] = useState(false);
   const { toast } = useToast();
+  const [selectedWarning, setSelectedWarning] = useState(null);
 
   const handleShare = async (reportId) => {
     try {
@@ -99,7 +99,7 @@ export default function DisasterFeed() {
 
   const handleSocialShare = (report, platform) => {
     const shareText = `${report.title} - ${report.description}`;
-    const shareUrl = window.location.href; // or your specific report URL
+    const shareUrl = window.location.href;
 
     switch (platform) {
       case "twitter":
@@ -132,19 +132,33 @@ export default function DisasterFeed() {
         <div className="bg-warning/20 p-2">
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex space-x-4 px-4">
-              {activeWarnings.map((warning, index) => (
+              {activeWarnings.map((warning) => (
                 <Badge
-                  key={index}
+                  key={warning.id}
                   variant="warning"
-                  className="animate-pulse flex items-center gap-2"
+                  className="animate-pulse flex items-center gap-2 cursor-pointer hover:bg-warning/30"
+                  onClick={() => setSelectedWarning(warning)}
                 >
                   <span className="font-bold">
                     {warning.disaster_category.toUpperCase()}:
                   </span>
                   <span>{warning.title}</span>
                   {warning.severity && (
-                    <span className="ml-2 px-1 py-0.5 text-xs bg-warning-foreground/10 rounded">
+                    <span
+                      className={`ml-2 px-1 py-0.5 text-xs rounded ${
+                        warning.severity === "critical"
+                          ? "bg-destructive text-destructive-foreground"
+                          : warning.severity === "high"
+                            ? "bg-warning text-warning-foreground"
+                            : "bg-warning-foreground/10"
+                      }`}
+                    >
                       {warning.severity}
+                    </span>
+                  )}
+                  {warning.affected_locations && (
+                    <span className="text-xs">
+                      ({warning.affected_locations[0].address.district})
                     </span>
                   )}
                 </Badge>
@@ -153,6 +167,12 @@ export default function DisasterFeed() {
           </ScrollArea>
         </div>
       )}
+
+      <WarningDetailDialog
+        warning={selectedWarning}
+        open={!!selectedWarning}
+        onOpenChange={(open) => !open && setSelectedWarning(null)}
+      />
 
       <main className="w-full h-full p-6">
         <div className="max-w-6xl mx-auto space-y-6">
@@ -167,13 +187,6 @@ export default function DisasterFeed() {
               </p>
             </div>
             <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowAlert(!showAlert)}
-              >
-                <BellIcon className="mr-2 h-4 w-4" />
-                Notifications
-              </Button>
               <Button onClick={refreshReports} disabled={loading}>
                 {loading ? (
                   <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
@@ -411,21 +424,6 @@ export default function DisasterFeed() {
           </div>
         </div>
       </main>
-
-      {/* Notification Settings Dialog */}
-      <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Notification Settings</AlertDialogTitle>
-            <AlertDialogDescription>
-              Choose which types of alerts you want to receive.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction>Save</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Toaster />
     </div>
