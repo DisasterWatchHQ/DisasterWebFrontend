@@ -10,22 +10,12 @@ export function PasswordResetForm({ onClose }) {
     email: "",
     username: "",
     lastPassword: "",
-    currentPassword:"",
-    newPassword:"",
-    confirmNewPassword:"",
-
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-
-    if (formData.newPassword !== formData.confirmNewPassword) {
-      toast.error("New Password and Confirm New password do not match");
-      setIsLoading(false);
-      return;
-    }
     try {
       // Add API call here to handle password reset request
       // const response = await fetch('/api/reset-password', {
@@ -73,40 +63,14 @@ export function PasswordResetForm({ onClose }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="currentPassword">Current Password</Label>
+        <Label htmlFor="lastPassword">Last Remembered Password</Label>
         <Input
-          id="currentPassword"
+          id="lastPassword"
           type="password"
-          placeholder="Enter your current password"
-          value={formData.currentPassword}
+          placeholder="Enter your last remembered password"
+          value={formData.lastPassword}
           onChange={(e) =>
-            setFormData({ ...formData, currentPassword: e.target.value })
-          }
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="newPassword">New Password</Label>
-        <Input
-          id="newPassword"
-          type="password"
-          placeholder="Enter your New password"
-          value={formData.newPassword}
-          onChange={(e) =>
-            setFormData({ ...formData, newPassword: e.target.value })
-          }
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
-        <Input
-          id="confirmNewPassword"
-          type="password"
-          placeholder="Confirm your new password"
-          value={formData.confirmNewPassword}
-          onChange={(e) =>
-            setFormData({ ...formData, confirmNewPassword: e.target.value })
+            setFormData({ ...formData, lastPassword: e.target.value })
           }
           required
         />
