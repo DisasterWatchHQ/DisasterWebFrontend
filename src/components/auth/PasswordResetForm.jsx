@@ -11,6 +11,8 @@ export function PasswordResetForm({ onClose }) {
     username: "",
     lastPassword: "",
     currentPassword:"",
+    newPassword:"",
+    confirmNewPassword:"",
 
   });
 
