@@ -457,15 +457,18 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <Button  
+                <Button 
                   variant="outline"
                   onClick={() => setIsChangePasswordOpen(true)}
-                  className="w-full">
-                    Change Password
-                  </Button>
-                  {isChangePassword && (
-                    <ChangePassword onClose={() => setIsChangePasswordOpen(false)} />
-                  )}
+                  className="w-full"
+                >
+                  Change Password
+                </Button>
+                <ChangePassword 
+                  open={isChangePassword} 
+                  onClose={() => setIsChangePasswordOpen(false)} 
+                />
+                
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
