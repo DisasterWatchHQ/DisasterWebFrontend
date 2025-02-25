@@ -39,6 +39,24 @@ import {
   Loader2 as ReloadIcon,
   Share as ShareIcon,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const DISTRICTS = [
+  "Colombo",
+  "Gampaha",
+  "Kalutara",
+  "Kandy",
+  "Matale",
+  "Nuwara Eliya",
+  "Kegalle",
+  // Add more districts as needed
+];
 
 export default function DisasterFeed() {
   const { reports, loading, error, filters, updateFilters, refreshReports } =
@@ -48,45 +66,31 @@ export default function DisasterFeed() {
   const { toast } = useToast();
   const [selectedWarning, setSelectedWarning] = useState(null);
 
-  const handleShare = async (reportId) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/api/userReport/share/${reportId}`,
-      );
-      const shareData = response.data.data;
-
-      if (navigator.share) {
-        await navigator.share({
-          title: shareData.title,
-          text: shareData.description,
-          url: shareData.shareUrl,
-        });
-      } else {
-        await navigator.clipboard.writeText(shareData.shareUrl);
-        toast({
-          title: "Link copied to clipboard",
-          description: "You can now share this report with others",
-        });
-      }
-    } catch (error) {
-      console.error("Error sharing report:", error);
-      toast({
-        title: "Error sharing report",
-        description: "Please try again later",
-        variant: "destructive",
-      });
-    }
-  };
-
   const filteredReports = (showVerifiedOnly) => {
-    return reports.filter(
-      (report) =>
-        !showVerifiedOnly || report.verification_status === "verified",
-    );
+    return reports.filter((report) => {
+      const verificationMatch =
+        !showVerifiedOnly || report.verification_status === "verified";
+      const categoryMatch =
+        !filters.disaster_category ||
+        report.disaster_category === filters.disaster_category;
+      const districtMatch =
+        !filters.district || report.district === filters.district;
+
+      return verificationMatch && categoryMatch && districtMatch;
+    });
   };
 
   const handleFilterChange = (type, value) => {
     updateFilters({ [type]: value, page: 1 });
+  };
+
+  const clearFilters = () => {
+    updateFilters({
+      disaster_category: "",
+      district: "",
+      verified_only: false,
+      page: 1,
+    });
   };
 
   if (error) {
@@ -104,26 +108,104 @@ export default function DisasterFeed() {
     switch (platform) {
       case "twitter":
         window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
-          "_blank",
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            shareText
+          )}&url=${encodeURIComponent(shareUrl)}`,
+          "_blank"
         );
         break;
       case "facebook":
         window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-          "_blank",
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            shareUrl
+          )}`,
+          "_blank"
         );
         break;
       case "whatsapp":
         window.open(
           `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
-          "_blank",
+          "_blank"
         );
         break;
       default:
         break;
     }
   };
+
+  const renderReportCard = (report) => (
+    <Card key={report.id}>
+      <CardHeader>
+        <CardTitle className="flex justify-between">
+          {report.title}
+          {report.verification_status !== "dismissed" && (
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleSocialShare(report, "twitter")}
+              >
+                <TwitterIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleSocialShare(report, "facebook")}
+              >
+                <FacebookIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleSocialShare(report, "whatsapp")}
+              >
+                <WhatsappIcon className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>{report.description}</p>
+        <div className="flex gap-2 mt-4">
+          <Badge>{report.disaster_category}</Badge>
+          {report.district && <Badge variant="outline">{report.district}</Badge>}
+          <Badge
+            variant={
+              report.verification_status === "verified"
+                ? "default"
+                : report.verification_status === "dismissed"
+                ? "destructive"
+                : "outline"
+            }
+          >
+            {report.verification_status}
+          </Badge>
+          {report.severity && (
+            <Badge
+              variant={
+                report.severity === "critical"
+                  ? "destructive"
+                  : report.severity === "high"
+                  ? "warning"
+                  : "default"
+              }
+            >
+              {report.severity}
+            </Badge>
+          )}
+        </div>
+        {report.verification_status === "dismissed" && (
+          <p className="text-sm text-muted-foreground mt-2">
+            This report has been dismissed and cannot be shared.
+          </p>
+        )}
+      </CardContent>
+      <CardFooter className="text-sm text-muted-foreground">
+        {new Date(report.timestamp).toLocaleString()}
+      </CardFooter>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -149,8 +231,8 @@ export default function DisasterFeed() {
                         warning.severity === "critical"
                           ? "bg-destructive text-destructive-foreground"
                           : warning.severity === "high"
-                            ? "bg-warning text-warning-foreground"
-                            : "bg-warning-foreground/10"
+                          ? "bg-warning text-warning-foreground"
+                          : "bg-warning-foreground/10"
                       }`}
                     >
                       {warning.severity}
@@ -179,9 +261,7 @@ export default function DisasterFeed() {
           {/* Header Section */}
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Disaster Feed
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">Disaster Feed</h1>
               <p className="text-muted-foreground">
                 Live updates and verified reports
               </p>
@@ -213,34 +293,65 @@ export default function DisasterFeed() {
                 </TabsList>
 
                 <div className="mb-4 mt-2">
-                  <div className="flex space-x-2">
-                    {[
-                      "flood",
-                      "fire",
-                      "earthquake",
-                      "landslide",
-                      "cyclone",
-                    ].map((category) => (
-                      <Badge
-                        key={category}
-                        variant={
-                          filters.disaster_category === category
-                            ? "default"
-                            : "outline"
-                        }
-                        className="cursor-pointer"
-                        onClick={() =>
-                          handleFilterChange(
-                            "disaster_category",
-                            filters.disaster_category === category
-                              ? ""
-                              : category,
-                          )
-                        }
-                      >
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </Badge>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        {[
+                          "flood",
+                          "fire",
+                          "earthquake",
+                          "landslide",
+                          "cyclone",
+                        ].map((category) => (
+                          <Badge
+                            key={category}
+                            variant={
+                              filters.disaster_category === category
+                                ? "default"
+                                : "outline"
+                            }
+                            className="cursor-pointer"
+                            onClick={() =>
+                              handleFilterChange(
+                                "disaster_category",
+                                filters.disaster_category === category
+                                  ? ""
+                                  : category
+                              )
+                            }
+                          >
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <div className="flex space-x-2">
+                        <Select
+                          value={filters.district || "all"}
+                          onValueChange={(value) =>
+                            handleFilterChange(
+                              "district",
+                              value === "all" ? "" : value
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select District" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Districts</SelectItem>
+                            {DISTRICTS.map((district) => (
+                              <SelectItem key={district} value={district}>
+                                {district}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={clearFilters}>
+                      Clear Filters
+                    </Button>
                   </div>
                 </div>
 
@@ -249,86 +360,14 @@ export default function DisasterFeed() {
                     <div className="text-center p-4">
                       <ReloadIcon className="animate-spin h-6 w-6 mx-auto" />
                     </div>
+                  ) : filteredReports(false).length === 0 ? (
+                    <div className="text-center p-4 text-muted-foreground">
+                      No reports found matching the selected filters
+                    </div>
                   ) : (
-                    filteredReports(false).map((report) => (
-                      <Card key={report.id}>
-                        <CardHeader>
-                          <CardTitle className="flex justify-between">
-                            {report.title}
-                            {report.verification_status !== "dismissed" && (
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSocialShare(report, "twitter")
-                                  }
-                                >
-                                  <TwitterIcon className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSocialShare(report, "facebook")
-                                  }
-                                >
-                                  <FacebookIcon className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSocialShare(report, "whatsapp")
-                                  }
-                                >
-                                  <WhatsappIcon className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p>{report.description}</p>
-                          <div className="flex gap-2 mt-4">
-                            <Badge>{report.disaster_category}</Badge>
-                            <Badge
-                              variant={
-                                report.verification_status === "verified"
-                                  ? "default"
-                                  : report.verification_status === "dismissed"
-                                    ? "destructive"
-                                    : "outline"
-                              }
-                            >
-                              {report.verification_status}
-                            </Badge>
-                            {report.severity && (
-                              <Badge
-                                variant={
-                                  report.severity === "critical"
-                                    ? "destructive"
-                                    : report.severity === "high"
-                                      ? "warning"
-                                      : "default"
-                                }
-                              >
-                                {report.severity}
-                              </Badge>
-                            )}
-                          </div>
-                          {report.verification_status === "dismissed" && (
-                            <p className="text-sm text-muted-foreground mt-2">
-                              This report has been dismissed and cannot be
-                              shared.
-                            </p>
-                          )}
-                        </CardContent>
-                        <CardFooter className="text-sm text-muted-foreground">
-                          {new Date(report.timestamp).toLocaleString()}
-                        </CardFooter>
-                      </Card>
-                    ))
+                    filteredReports(false).map((report) =>
+                      renderReportCard(report)
+                    )
                   )}
                 </TabsContent>
 
@@ -337,86 +376,12 @@ export default function DisasterFeed() {
                     <div className="text-center p-4">
                       <ReloadIcon className="animate-spin h-6 w-6 mx-auto" />
                     </div>
+                  ) : filteredReports(true).length === 0 ? (
+                    <div className="text-center p-4 text-muted-foreground">
+                      No verified reports found matching the selected filters
+                    </div>
                   ) : (
-                    filteredReports(true).map((report) => (
-                      <Card key={report.id}>
-                        <CardHeader>
-                          <CardTitle className="flex justify-between">
-                            {report.title}
-                            {report.verification_status !== "dismissed" && (
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSocialShare(report, "twitter")
-                                  }
-                                >
-                                  <TwitterIcon className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSocialShare(report, "facebook")
-                                  }
-                                >
-                                  <FacebookIcon className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleSocialShare(report, "whatsapp")
-                                  }
-                                >
-                                  <WhatsappIcon className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p>{report.description}</p>
-                          <div className="flex gap-2 mt-4">
-                            <Badge>{report.disaster_category}</Badge>
-                            <Badge
-                              variant={
-                                report.verification_status === "verified"
-                                  ? "default"
-                                  : report.verification_status === "dismissed"
-                                    ? "destructive"
-                                    : "outline"
-                              }
-                            >
-                              {report.verification_status}
-                            </Badge>
-                            {report.severity && (
-                              <Badge
-                                variant={
-                                  report.severity === "critical"
-                                    ? "destructive"
-                                    : report.severity === "high"
-                                      ? "warning"
-                                      : "default"
-                                }
-                              >
-                                {report.severity}
-                              </Badge>
-                            )}
-                          </div>
-                          {report.verification_status === "dismissed" && (
-                            <p className="text-sm text-muted-foreground mt-2">
-                              This report has been dismissed and cannot be
-                              shared.
-                            </p>
-                          )}
-                        </CardContent>
-                        <CardFooter className="text-sm text-muted-foreground">
-                          {new Date(report.timestamp).toLocaleString()}
-                        </CardFooter>
-                      </Card>
-                    ))
+                    filteredReports(true).map((report) => renderReportCard(report))
                   )}
                 </TabsContent>
               </Tabs>
