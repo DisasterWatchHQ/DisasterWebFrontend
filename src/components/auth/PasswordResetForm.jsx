@@ -20,6 +20,12 @@ export function PasswordResetForm({ onClose }) {
     e.preventDefault();
     setIsLoading(true);
 
+
+    if (formData.newPassword !== formData.confirmNewPassword) {
+      toast.error("New Password and Confirm New password do not match");
+      setIsLoading(false);
+      return;
+    }
     try {
       // Add API call here to handle password reset request
       // const response = await fetch('/api/reset-password', {
