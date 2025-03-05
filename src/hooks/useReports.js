@@ -13,19 +13,19 @@ export const useReports = () => {
     verified_only: false,
     district: "",
   });
+  
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Convert filters to query parameters
       const queryParams = new URLSearchParams({
         page: filters.page.toString(),
         limit: filters.limit.toString(),
         verified_only: filters.verified_only.toString(),
       });
 
-      // Only add disaster_category if it's not empty
       if (filters.disaster_category) {
         queryParams.append("disaster_category", filters.disaster_category);
       }
@@ -36,12 +36,11 @@ export const useReports = () => {
 
       const [reportsResponse, statsResponse] = await Promise.all([
         axios.get(
-          `http://localhost:5000/api/userReport/reports?${queryParams}`,
+          `${API_BASE_URL}/userReport/reports?${queryParams}`,
         ),
-        axios.get("http://localhost:5000/api/userReport/feedstats"),
+        axios.get(`${API_BASE_URL}/userReport/feedstats`),
       ]);
 
-      // Properly map the response data
       const mappedReports = reportsResponse.data.data.reports.map((report) => ({
         id: report.id || report._id,
         title: report.title,
@@ -65,7 +64,7 @@ export const useReports = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, API_BASE_URL]);
 
   const updateFilters = (newFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
