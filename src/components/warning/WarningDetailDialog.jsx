@@ -10,8 +10,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export function WarningDetailDialog({ warning, open, onOpenChange }) {
   if (!warning) return null;
 
-  console.log("Warning Data:", warning); // Keep this for debugging
-
   const formatLocation = (location) => {
     try {
       if (!location?.address) return "Location details not available";

@@ -14,15 +14,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Sun, Moon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // ShadCN's Avatar
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
-import { useUser } from "@/provider/UserContext"; // Importing the context
+import { useUser } from "@/provider/UserContext";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"; // ShadCN dropdown
+} from "@/components/ui/dropdown-menu"; 
 
 const routes = [
   { href: "/map", label: "Map" },
@@ -147,7 +147,6 @@ export default function Header() {
           </NavigationMenu>
         </div>
 
-        {/* Mobile Menu */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -200,7 +199,6 @@ export default function Header() {
           </SheetContent>
         </Sheet>
 
-        {/* Right Side */}
         <div className="flex items-center justify-end ml-auto space-x-4">
           <Button
             variant="ghost"

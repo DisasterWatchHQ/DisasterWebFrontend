@@ -60,7 +60,7 @@ const formSchema = z.object({
     )
     .min(1, "At least one location must be specified"),
   expected_duration: z.object({
-    start_time: z.string().optional(), // Made optional since it defaults to current time
+    start_time: z.string().optional(), 
     end_time: z.string().optional(),
   }),
   images: z.array(z.string().url()).optional(),
@@ -69,10 +69,11 @@ const formSchema = z.object({
 const CreateWarningDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
   const { toast } = useToast();
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -122,7 +123,7 @@ const CreateWarningDialog = () => {
 
       const formattedData = {
         ...data,
-        created_by: user.id, // Explicitly include user ID
+        created_by: user.id, 
         expected_duration: {
           start_time: new Date(data.expected_duration.start_time),
           end_time: data.expected_duration.end_time
@@ -141,7 +142,7 @@ const CreateWarningDialog = () => {
         })),
       };
 
-      const response = await fetch("http://localhost:5000/api/warning/", {
+      const response = await fetch(`${API_BASE_URL}/warning/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

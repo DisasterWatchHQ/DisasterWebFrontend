@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import Script from "next/script";
 
-// Component for selecting a location
 export const MapPicker = ({ onLocationSelect }) => {
   const [map, setMap] = useState(null);
   const [marker, setMarker] = useState(null);
@@ -10,10 +9,9 @@ export const MapPicker = ({ onLocationSelect }) => {
 
   useEffect(() => {
       if (!window.google) return;
-      
-      // Initialize map
+
       const mapInstance = new window.google.maps.Map(document.getElementById('picker-map'), {
-        center: { lat: 0, lng: 0 }, // Set your default center
+        center: { lat: 0, lng: 0 }, 
         zoom: 8,
         streetViewControl: false,
         mapTypeControl: false
@@ -21,16 +19,12 @@ export const MapPicker = ({ onLocationSelect }) => {
       
       setMap(mapInstance);
       setGeocoder(new window.google.maps.Geocoder());
-  
-      // Add click handler
+
       mapInstance.addListener('click', async (e) => {
         const latitude = e.latLng.lat();
         const longitude = e.latLng.lng();
-        
-        // Remove existing marker
         if (marker) marker.setMap(null);
-        
-        // Add new marker
+
         const newMarker = new window.google.maps.Marker({
           position: { lat: latitude, lng: longitude },
           map: mapInstance,
@@ -38,8 +32,7 @@ export const MapPicker = ({ onLocationSelect }) => {
         });
         
         setMarker(newMarker);
-        
-        // Get location details using reverse geocoding
+
         try {
           const result = await getAddressDetails({ lat: latitude, lng: longitude });
           onLocationSelect({
@@ -50,8 +43,7 @@ export const MapPicker = ({ onLocationSelect }) => {
         } catch (error) {
           console.error('Geocoding failed:', error);
         }
-  
-        // Handle marker drag
+
         newMarker.addListener('dragend', async () => {
           const position = newMarker.getPosition();
           const lat = position.lat();
@@ -79,16 +71,14 @@ export const MapPicker = ({ onLocationSelect }) => {
       if (response.results[0]) {
         const result = response.results[0];
         const addressComponents = result.address_components;
-        
-        // Initialize address object
+
         const address = {
           city: '',
           district: '',
           province: '',
           details: result.formatted_address
         };
-  
-        // Map address components to our format
+
         addressComponents.forEach(component => {
           const types = component.types;
           
@@ -122,14 +112,12 @@ export const MapPicker = ({ onLocationSelect }) => {
     );
   };
 
-// Component for displaying saved locations
 export const LocationsDisplay = ({ locations }) => {
   const [map, setMap] = useState(null);
 
   useEffect(() => {
     if (!window.google || !locations?.length) return;
 
-    // Initialize map
     const mapInstance = new window.google.maps.Map(
       document.getElementById("display-map"),
       {
@@ -143,10 +131,8 @@ export const LocationsDisplay = ({ locations }) => {
 
     setMap(mapInstance);
 
-    // Create bounds to fit all markers
     const bounds = new window.google.maps.LatLngBounds();
 
-    // Add markers for all locations
     locations.forEach((location) => {
       const marker = new window.google.maps.Marker({
         position: {
@@ -160,7 +146,6 @@ export const LocationsDisplay = ({ locations }) => {
       bounds.extend(marker.getPosition());
     });
 
-    // Fit map to show all markers
     mapInstance.fitBounds(bounds);
   }, [locations]);
 

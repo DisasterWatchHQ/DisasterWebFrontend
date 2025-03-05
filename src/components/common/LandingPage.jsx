@@ -7,7 +7,6 @@ import Link from "next/link";
 const LandingPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Hero Section */}
       <section
         className="relative py-20 px-4"
         style={{
@@ -40,7 +39,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="py-16 px-4 bg-muted/50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
@@ -110,7 +108,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section
         className="relative py-20 px-4"
         style={{

@@ -1,36 +1,38 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+"use client";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { MapPin } from 'lucide-react';
+} from "@/components/ui/select";
+import { MapPin } from "lucide-react";
 
 export default function FacilitiesPage() {
   const [facilities, setFacilities] = useState([]);
   const [filters, setFilters] = useState({
-    type: 'all',
-    city: '',
-    availability_status: 'all',
+    type: "all",
+    city: "",
+    availability_status: "all",
   });
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   useEffect(() => {
     const fetchFacilities = async () => {
       const queryParams = new URLSearchParams();
-      if (filters.type !== 'all') queryParams.append('type', filters.type);
-      if (filters.city) queryParams.append('city', filters.city);
-      if (filters.availability_status !== 'all') {
-        queryParams.append('availability_status', filters.availability_status);
+      if (filters.type !== "all") queryParams.append("type", filters.type);
+      if (filters.city) queryParams.append("city", filters.city);
+      if (filters.availability_status !== "all") {
+        queryParams.append("availability_status", filters.availability_status);
       }
-      
+
       const response = await fetch(
-        `http://localhost:5000/api/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+        `${API_BASE_URL}/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`,
       );
       const data = await response.json();
       setFacilities(data.resources);
@@ -49,7 +51,7 @@ export default function FacilitiesPage() {
           onChange={(e) => setFilters({ ...filters, city: e.target.value })}
           className="max-w-sm"
         />
-        <Select 
+        <Select
           value={filters.type}
           onValueChange={(value) => setFilters({ ...filters, type: value })}
         >
@@ -65,9 +67,9 @@ export default function FacilitiesPage() {
             <SelectItem value="hospital">Hospital</SelectItem>
           </SelectContent>
         </Select>
-        <Select 
+        <Select
           value={filters.availability_status}
-          onValueChange={(value) => 
+          onValueChange={(value) =>
             setFilters({ ...filters, availability_status: value })
           }
         >
@@ -93,10 +95,15 @@ export default function FacilitiesPage() {
               </CardTitle>
               <div className="flex gap-2">
                 <Badge>{facility.type}</Badge>
-                <Badge variant={
-                  facility.availability_status === 'available' ? 'success' :
-                  facility.availability_status === 'full' ? 'warning' : 'destructive'
-                }>
+                <Badge
+                  variant={
+                    facility.availability_status === "available"
+                      ? "success"
+                      : facility.availability_status === "full"
+                        ? "warning"
+                        : "destructive"
+                  }
+                >
                   {facility.availability_status}
                 </Badge>
               </div>
@@ -106,19 +113,19 @@ export default function FacilitiesPage() {
                 <p className="text-muted-foreground">
                   {facility.location.address.formatted_address}
                 </p>
-                {facility.capacity && (
-                  <p>Capacity: {facility.capacity}</p>
-                )}
+                {facility.capacity && <p>Capacity: {facility.capacity}</p>}
                 {facility.operating_hours && (
                   <div>
-                    {Object.entries(facility.operating_hours).map(([day, hours]) => (
-                      <p key={day}>
-                        {day}: {hours.open} - {hours.close} {hours.is24Hours ? "(24 Hours)" : ""}
-                      </p>
-                    ))}
+                    {Object.entries(facility.operating_hours).map(
+                      ([day, hours]) => (
+                        <p key={day}>
+                          {day}: {hours.open} - {hours.close}{" "}
+                          {hours.is24Hours ? "(24 Hours)" : ""}
+                        </p>
+                      ),
+                    )}
                   </div>
                 )}
-
               </div>
             </CardContent>
           </Card>
