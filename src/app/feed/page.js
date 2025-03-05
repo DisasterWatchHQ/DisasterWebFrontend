@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { useReports } from "@/hooks/useReports";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
-import axios from "axios";
-
-// shadcn components
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,15 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -34,11 +22,7 @@ import {
   Share2 as WhatsappIcon,
 } from "lucide-react";
 import { WarningDetailDialog } from "@/components/warning/WarningDetailDialog";
-import {
-  Bell as BellIcon,
-  Loader2 as ReloadIcon,
-  Share as ShareIcon,
-} from "lucide-react";
+import { Loader2 as ReloadIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -55,15 +39,30 @@ const DISTRICTS = [
   "Matale",
   "Nuwara Eliya",
   "Kegalle",
-  // Add more districts as needed
+  "Ratnapura",
+  "Galle",
+  "Matara",
+  "Hambantota",
+  "Jaffna",
+  "Kilinochchi",
+  "Mannar",
+  "Vavuniya",
+  "Mullaitivu",
+  "Batticaloa",
+  "Ampara",
+  "Trincomalee",
+  "Kurunegala",
+  "Puttalam",
+  "Anuradhapura",
+  "Polonnaruwa",
+  "Badulla",
+  "Monaragala",
 ];
 
 export default function DisasterFeed() {
   const { reports, loading, error, filters, updateFilters, refreshReports } =
     useReports();
   const { updates, activeWarnings } = useLiveUpdates();
-  const [showAlert, setShowAlert] = useState(false);
-  const { toast } = useToast();
   const [selectedWarning, setSelectedWarning] = useState(null);
 
   const filteredReports = (showVerifiedOnly) => {
@@ -109,23 +108,23 @@ export default function DisasterFeed() {
       case "twitter":
         window.open(
           `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-            shareText
+            shareText,
           )}&url=${encodeURIComponent(shareUrl)}`,
-          "_blank"
+          "_blank",
         );
         break;
       case "facebook":
         window.open(
           `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-            shareUrl
+            shareUrl,
           )}`,
-          "_blank"
+          "_blank",
         );
         break;
       case "whatsapp":
         window.open(
           `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
-          "_blank"
+          "_blank",
         );
         break;
       default:
@@ -169,14 +168,16 @@ export default function DisasterFeed() {
         <p>{report.description}</p>
         <div className="flex gap-2 mt-4">
           <Badge>{report.disaster_category}</Badge>
-          {report.district && <Badge variant="outline">{report.district}</Badge>}
+          {report.district && (
+            <Badge variant="outline">{report.district}</Badge>
+          )}
           <Badge
             variant={
               report.verification_status === "verified"
                 ? "default"
                 : report.verification_status === "dismissed"
-                ? "destructive"
-                : "outline"
+                  ? "destructive"
+                  : "outline"
             }
           >
             {report.verification_status}
@@ -187,8 +188,8 @@ export default function DisasterFeed() {
                 report.severity === "critical"
                   ? "destructive"
                   : report.severity === "high"
-                  ? "warning"
-                  : "default"
+                    ? "warning"
+                    : "default"
               }
             >
               {report.severity}
@@ -209,7 +210,6 @@ export default function DisasterFeed() {
 
   return (
     <div className="min-h-screen w-full bg-background">
-      {/* Active Warnings Banner */}
       {activeWarnings.length > 0 && (
         <div className="bg-warning/20 p-2">
           <ScrollArea className="w-full whitespace-nowrap">
@@ -231,8 +231,8 @@ export default function DisasterFeed() {
                         warning.severity === "critical"
                           ? "bg-destructive text-destructive-foreground"
                           : warning.severity === "high"
-                          ? "bg-warning text-warning-foreground"
-                          : "bg-warning-foreground/10"
+                            ? "bg-warning text-warning-foreground"
+                            : "bg-warning-foreground/10"
                       }`}
                     >
                       {warning.severity}
@@ -261,7 +261,9 @@ export default function DisasterFeed() {
           {/* Header Section */}
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Disaster Feed</h1>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Disaster Feed
+              </h1>
               <p className="text-muted-foreground">
                 Live updates and verified reports
               </p>
@@ -277,9 +279,7 @@ export default function DisasterFeed() {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Reports Feed */}
             <div className="md:col-span-3">
               <Tabs
                 defaultValue="all"
@@ -316,11 +316,12 @@ export default function DisasterFeed() {
                                 "disaster_category",
                                 filters.disaster_category === category
                                   ? ""
-                                  : category
+                                  : category,
                               )
                             }
                           >
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                            {category.charAt(0).toUpperCase() +
+                              category.slice(1)}
                           </Badge>
                         ))}
                       </div>
@@ -331,7 +332,7 @@ export default function DisasterFeed() {
                           onValueChange={(value) =>
                             handleFilterChange(
                               "district",
-                              value === "all" ? "" : value
+                              value === "all" ? "" : value,
                             )
                           }
                         >
@@ -366,7 +367,7 @@ export default function DisasterFeed() {
                     </div>
                   ) : (
                     filteredReports(false).map((report) =>
-                      renderReportCard(report)
+                      renderReportCard(report),
                     )
                   )}
                 </TabsContent>
@@ -381,7 +382,9 @@ export default function DisasterFeed() {
                       No verified reports found matching the selected filters
                     </div>
                   ) : (
-                    filteredReports(true).map((report) => renderReportCard(report))
+                    filteredReports(true).map((report) =>
+                      renderReportCard(report),
+                    )
                   )}
                 </TabsContent>
               </Tabs>

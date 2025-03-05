@@ -16,16 +16,9 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
-  User,
-  Mail,
   Building,
   MapPin,
-  Phone,
   Calendar,
-  Bell,
-  Shield,
-  Language,
-  LogOut,
   Upload,
   Trash2,
 } from "lucide-react";
@@ -48,7 +41,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ChangePassword } from "@/components/common/ChangePassword";
 
 const API_BASE_URL =

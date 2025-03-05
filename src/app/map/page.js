@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -12,8 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Search,
-  LayersIcon,
-  Filter,
   AlertTriangle,
   Locate,
 } from "lucide-react";
@@ -25,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Keep libraries constant
 const libraries = ['places'];
 
 const SRI_LANKA_BOUNDS = {
@@ -142,8 +139,8 @@ export default function Map() {
         setIsLoading(false);
       },
       {
-        enableHighAccuracy: true, // Or try false for faster results
-        timeout: 15000, // Adjust timeout
+        enableHighAccuracy: true, 
+        timeout: 15000, 
         maximumAge: 0,
       }
     );

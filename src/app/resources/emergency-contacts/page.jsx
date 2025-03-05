@@ -6,11 +6,13 @@ import { Phone } from "lucide-react";
 
 export default function EmergencyContactsPage() {
   const [contacts, setContacts] = useState([]);
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   useEffect(() => {
     const fetchContacts = async () => {
       const response = await fetch(
-        "http://localhost:5000/api/resources/emergency-contacts",
+        `${API_BASE_URL}/resources/emergency-contacts`,
       );
       const data = await response.json();
       setContacts(data.resources);

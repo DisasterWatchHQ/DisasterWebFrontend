@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2 } from "lucide-react";
-import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -51,6 +50,8 @@ const formSchema = z.object({
 export default function ReportPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -74,7 +75,7 @@ export default function ReportPage() {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch("http://localhost:5000/api/userReport", {
+      const response = await fetch(`${API_BASE_URL}/userReport`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
