@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 export const createUser = async (userData) => {
   try {
@@ -9,17 +9,14 @@ export const createUser = async (userData) => {
       userData,
       {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
-    
+
     return response.data;
   } catch (error) {
-    // Extract the error message from the response if it exists
     const errorMessage = error.response?.data?.message || error.message;
-    
-    // Throw an error with the message so it can be handled by the frontend
     throw new Error(errorMessage);
   }
 };
@@ -31,17 +28,15 @@ export const loginUser = async (credentials) => {
       credentials,
       {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        withCredentials: true, // Important for receiving cookies
-      }
+        withCredentials: true,
+      },
     );
 
-    // Store the token if you need it in the frontend
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      // You might also want to store user data
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
     }
 
     return response.data;
@@ -51,19 +46,16 @@ export const loginUser = async (credentials) => {
   }
 };
 
-// Utility function to get the current logged-in user's data
 export const getCurrentUser = () => {
-  const userStr = localStorage.getItem('user');
+  const userStr = localStorage.getItem("user");
   return userStr ? JSON.parse(userStr) : null;
 };
 
-// Utility function to check if user is logged in
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('token');
+  return !!localStorage.getItem("token");
 };
 
-// Utility function to logout
 export const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
 };
