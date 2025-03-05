@@ -27,9 +27,9 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import axios from 'axios';
+import axios from "axios";
 import { WarningActions } from "@/components/warning/WarningActions";
-import CreateWarningDialog  from "@/components/report/CreateWarningDialog";
+import CreateWarningDialog from "@/components/report/CreateWarningDialog";
 
 const AdminDashboard = () => {
   const [dashboardStats, setDashboardStats] = useState({
@@ -54,20 +54,6 @@ const AdminDashboard = () => {
 
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
 
-  const fetchDashboardStats = async () => {
-    try {
-      const response = await api.get("/userReport/stats/verification");
-      setDashboardStats({
-        pendingCount: response.data.pendingCount,
-        verifiedToday: response.data.verifiedToday,
-        activeIncidents: response.data.activeIncidents,
-        avgVerificationTime: Math.round(response.data.avgVerificationTime),
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-    }
-  };
-
   const fetchActiveWarnings = async () => {
     try {
       const response = await api.get("/warning/active");
@@ -76,7 +62,7 @@ const AdminDashboard = () => {
       console.error("Error fetching active warnings:", error);
     }
   };
-  
+
   const fetchPendingReports = async () => {
     try {
       const response = await api.get("/userReport/public", {
@@ -98,36 +84,6 @@ const AdminDashboard = () => {
       setPendingReports(formattedReports);
     } catch (error) {
       console.error("Error fetching pending reports:", error);
-    }
-  };
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await api.get("/userReport/stats/analytics");
-
-      // Format weekly trends data
-      const trends = response.data.weeklyTrends.reduce((acc, curr) => {
-        const date = curr._id.date;
-        if (!acc[date]) {
-          acc[date] = { date };
-        }
-        acc[date][curr._id.status] = curr.count;
-        return acc;
-      }, {});
-
-      setAnalyticsData({
-        weeklyTrends: Object.values(trends),
-        reportTypes: response.data.reportTypes.map((type) => ({
-          name: type._id,
-          value: type.count,
-        })),
-        responseTime: response.data.responseTime.map((time) => ({
-          time: `${Math.round(time.avgTime)}h`,
-          count: time.count,
-        })),
-      });
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
     }
   };
 
@@ -157,31 +113,28 @@ const AdminDashboard = () => {
   const fetchReportAnalytics = async () => {
     try {
       const response = await api.get("/userReport/stats/analytics");
-      
-      // Ensure reportTypes has the correct structure
-      const reportTypes = response.data.reportTypes.map(type => ({
+
+      const reportTypes = response.data.reportTypes.map((type) => ({
         name: type.name || "Unknown",
-        value: type.value || 0
+        value: type.value || 0,
       }));
-  
-      // Format weekly trends data
-      const formattedTrends = response.data.weeklyTrends.map(trend => ({
+
+      const formattedTrends = response.data.weeklyTrends.map((trend) => ({
         date: trend.date,
         verified: trend.verified || 0,
         pending: trend.pending || 0,
-        dismissed: trend.dismissed || 0
+        dismissed: trend.dismissed || 0,
       }));
-  
-      // Format response time data
-      const responseTime = response.data.responseTime.map(item => ({
+
+      const responseTime = response.data.responseTime.map((item) => ({
         time: item.time,
-        count: item.count
+        count: item.count,
       }));
-  
+
       setAnalyticsData({
         weeklyTrends: formattedTrends,
         reportTypes: reportTypes,
-        responseTime: responseTime
+        responseTime: responseTime,
       });
     } catch (error) {
       console.error("Error fetching report analytics:", error);
@@ -217,42 +170,16 @@ const AdminDashboard = () => {
           notes: "Dismissed through dashboard",
         });
       }
-      fetchPendingReports(); // Refresh the list after action
+      fetchPendingReports();
     } catch (error) {
       console.error(`Error ${action}ing report:`, error);
     }
   };
 
-  const reportTrends = [
-    { date: "01/02", verified: 15, pending: 8, rejected: 2 },
-    { date: "01/03", verified: 12, pending: 10, rejected: 3 },
-    { date: "01/04", verified: 20, pending: 5, rejected: 1 },
-    { date: "01/05", verified: 18, pending: 7, rejected: 4 },
-    { date: "01/06", verified: 25, pending: 12, rejected: 2 },
-    { date: "01/07", verified: 22, pending: 9, rejected: 3 },
-    { date: "01/08", verified: 16, pending: 11, rejected: 2 },
-  ];
-
-  const reportTypes = [
-    { name: "Floods", value: 35 },
-    { name: "Fire", value: 25 },
-    { name: "Infrastructure", value: 20 },
-    { name: "Weather", value: 15 },
-    { name: "Others", value: 5 },
-  ];
-
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
-
-  const responseTimeData = [
-    { time: "<1h", count: 45 },
-    { time: "1-2h", count: 30 },
-    { time: "2-4h", count: 15 },
-    { time: ">4h", count: 10 },
-  ];
 
   return (
     <div className="p-6 space-y-6">
-      {/* Top Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -311,7 +238,6 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Pending Reports Table */}
       <Card>
         <CardHeader>
           <CardTitle>Reports Awaiting Verification</CardTitle>
@@ -385,7 +311,8 @@ const AdminDashboard = () => {
                   </div>
                   {warning.updates.length > 0 && (
                     <div className="text-sm text-muted-foreground">
-                      Last update: {warning.updates[warning.updates.length - 1].update_text}
+                      Last update:{" "}
+                      {warning.updates[warning.updates.length - 1].update_text}
                     </div>
                   )}
                 </div>
@@ -403,8 +330,7 @@ const AdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
-      
-      {/* Analytics Section */}
+
       <Tabs defaultValue="trends" className="space-y-4">
         <TabsList>
           <TabsTrigger value="trends">Report Trends</TabsTrigger>

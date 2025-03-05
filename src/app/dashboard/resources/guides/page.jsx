@@ -52,6 +52,9 @@ export default function GuidesPage() {
   const [selectedGuide, setSelectedGuide] = useState(null);
   const [token, setToken] = useState(null);
 
+  const API_BASE_URL =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
+
   const [formData, setFormData] = useState({
     name: "",
     category: "guide",
@@ -81,7 +84,7 @@ export default function GuidesPage() {
   const fetchGuides = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/resources/guides${selectedType !== "all" ? `?type=${selectedType}` : ""}`,
+        `${API_BASE_URL}/resources/guides${selectedType !== "all" ? `?type=${selectedType}` : ""}`,
       );
       const data = await response.json();
       setGuides(data.resources);
@@ -108,8 +111,8 @@ export default function GuidesPage() {
 
     try {
       const url = editingGuide
-        ? `http://localhost:5000/api/resources/${editingGuide.id}`
-        : "http://localhost:5000/api/resources/";
+        ? `${API_BASE_URL}/resources/${editingGuide.id}`
+        : `${API_BASE_URL}/resources/`;
 
       const method = editingGuide ? "PUT" : "POST";
 
@@ -152,7 +155,7 @@ export default function GuidesPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/resources/guides/${guideId}`,
+        `${API_BASE_URL}/resources/guides/${guideId}`,
         {
           method: "DELETE",
           headers: {

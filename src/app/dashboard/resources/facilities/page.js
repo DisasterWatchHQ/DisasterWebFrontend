@@ -47,6 +47,8 @@ export default function FacilitiesPage() {
     city: "",
     availability_status: "all",
   });
+  const API_BASE_URL =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -71,7 +73,7 @@ export default function FacilitiesPage() {
     metadata: {
       capacity: 0,
     },
-    // Add capacity at the root level for shelter type
+
     capacity: 0,
     operating_hours: {
       monday: { open: "09:00", close: "17:00", is24Hours: false },
@@ -105,7 +107,7 @@ export default function FacilitiesPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`,
+        `${API_BASE_URL}/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`,
       );
       const data = await response.json();
       setFacilities(data.resources);
@@ -150,7 +152,6 @@ export default function FacilitiesPage() {
           coordinates: [longitude, latitude],
           address: formData.location.address,
         },
-        // Set capacity in the proper location
         capacity:
           formData.type === "shelter"
             ? Number(formData.metadata.capacity)
@@ -165,8 +166,8 @@ export default function FacilitiesPage() {
       };
 
       const url = editingFacility
-        ? `http://localhost:5000/api/resources/${editingFacility.id}`
-        : "http://localhost:5000/api/resources/";
+        ? `${API_BASE_URL}/resources/${editingFacility.id}`
+        : `${API_BASE_URL}/resources/`;
 
       const method = editingFacility ? "PUT" : "POST";
 
@@ -199,16 +200,13 @@ export default function FacilitiesPage() {
 
   const handleDelete = async (facilityId) => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/resources/${facilityId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+      const response = await fetch(`${API_BASE_URL}/resources/${facilityId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (response.ok) {
         toast({

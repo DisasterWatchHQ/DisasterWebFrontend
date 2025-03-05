@@ -54,6 +54,8 @@ export default function EmergencyContactsPage() {
     status: "active",
   });
   const [editingContact, setEditingContact] = useState(null);
+  const API_BASE_URL =
+    process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -64,7 +66,7 @@ export default function EmergencyContactsPage() {
   const fetchContacts = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/api/resources/emergency-contacts",
+        `${API_BASE_URL}/resources/emergency-contacts`,
       );
       const data = await response.json();
       setContacts(data.resources);
@@ -106,8 +108,8 @@ export default function EmergencyContactsPage() {
 
     try {
       const url = editingContact
-        ? `http://localhost:5000/api/resources/${editingContact.id}`
-        : "http://localhost:5000/api/resources";
+        ? `${API_BASE_URL}/resources/${editingContact.id}`
+        : `${API_BASE_URL}/resources`;
 
       const method = editingContact ? "PUT" : "POST";
 
@@ -150,7 +152,7 @@ export default function EmergencyContactsPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/resources/${contactId}`,
+        `${API_BASE_URL}/resources/${contactId}`,
         {
           method: "DELETE",
           headers: {
