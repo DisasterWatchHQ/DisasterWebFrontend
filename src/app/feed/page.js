@@ -20,9 +20,9 @@ import {
   Twitter as TwitterIcon,
   Facebook as FacebookIcon,
   Share2 as WhatsappIcon,
+  Loader2,
 } from "lucide-react";
 import { WarningDetailDialog } from "@/components/warning/WarningDetailDialog";
-import { Loader2 as ReloadIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Pagination } from "@/components/ui/pagination";
 
 const DISTRICTS = [
   "Colombo",
@@ -59,43 +60,78 @@ const DISTRICTS = [
   "Monaragala",
 ];
 
+const VERIFICATION_STATUSES = [
+  { value: "all", label: "All Reports" },
+  { value: "pending", label: "Pending" },
+  { value: "verified", label: "Verified" },
+  { value: "dismissed", label: "Dismissed" },
+];
+
 export default function DisasterFeed() {
-  const { reports, loading, error, filters, updateFilters, refreshReports } =
-    useReports();
+  const { toast } = useToast();
+  const {
+    reports,
+    loading,
+    error,
+    filters,
+    updateFilters,
+    refreshReports,
+    stats,
+    pagination,
+  } = useReports();
   const { updates, activeWarnings } = useLiveUpdates();
   const [selectedWarning, setSelectedWarning] = useState(null);
 
-  const filteredReports = (showVerifiedOnly) => {
-    return reports.filter((report) => {
-      const verificationMatch =
-        !showVerifiedOnly || report.verification_status === "verified";
-      const categoryMatch =
-        !filters.disaster_category ||
-        report.disaster_category === filters.disaster_category;
-      const districtMatch =
-        !filters.district || report.district === filters.district;
+  const handlePageChange = (page) => {
+    updateFilters({ page });
+  };
 
-      return verificationMatch && categoryMatch && districtMatch;
+  const handleVerificationFilter = (status) => {
+    updateFilters({
+      verification_status: status === "all" ? "" : status,
+      page: 1,
     });
   };
 
   const handleFilterChange = (type, value) => {
-    updateFilters({ [type]: value, page: 1 });
+    updateFilters({
+      [type]: value,
+      page: 1,
+    });
   };
 
   const clearFilters = () => {
     updateFilters({
       disaster_category: "",
       district: "",
-      verified_only: false,
+      verification_status: "",
       page: 1,
     });
   };
 
+  const handleRefresh = async () => {
+    try {
+      await refreshReports();
+      toast({
+        title: "Feed Updated",
+        description: "Latest reports have been loaded.",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh reports.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (error) {
     return (
-      <div className="p-4 text-center text-destructive">
-        Error loading reports: {error}
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
+        <div className="text-destructive text-lg mb-4">
+          Error loading reports: {error}
+        </div>
+        <Button onClick={refreshReports}>Try Again</Button>
       </div>
     );
   }
@@ -133,7 +169,7 @@ export default function DisasterFeed() {
   };
 
   const renderReportCard = (report) => (
-    <Card key={report.id}>
+    <Card key={report.id || report._id}>
       <CardHeader>
         <CardTitle className="flex justify-between">
           {report.title}
@@ -168,8 +204,8 @@ export default function DisasterFeed() {
         <p>{report.description}</p>
         <div className="flex gap-2 mt-4">
           <Badge>{report.disaster_category}</Badge>
-          {report.district && (
-            <Badge variant="outline">{report.district}</Badge>
+          {report.location?.address?.district && (
+            <Badge variant="outline">{report.location.address.district}</Badge>
           )}
           <Badge
             variant={
@@ -182,17 +218,17 @@ export default function DisasterFeed() {
           >
             {report.verification_status}
           </Badge>
-          {report.severity && (
+          {report.verification?.severity && (
             <Badge
               variant={
-                report.severity === "critical"
+                report.verification.severity === "critical"
                   ? "destructive"
-                  : report.severity === "high"
+                  : report.verification.severity === "high"
                     ? "warning"
                     : "default"
               }
             >
-              {report.severity}
+              {report.verification.severity}
             </Badge>
           )}
         </div>
@@ -203,7 +239,7 @@ export default function DisasterFeed() {
         )}
       </CardContent>
       <CardFooter className="text-sm text-muted-foreground">
-        {new Date(report.timestamp).toLocaleString()}
+        {new Date(report.date_time).toLocaleString()}
       </CardFooter>
     </Card>
   );
@@ -253,12 +289,11 @@ export default function DisasterFeed() {
       <WarningDetailDialog
         warning={selectedWarning}
         open={!!selectedWarning}
-        onOpenChange={(open) => !open && setSelectedWarning(null)}
+        onClose={() => setSelectedWarning(null)}
       />
 
       <main className="w-full h-full p-6">
         <div className="max-w-6xl mx-auto space-y-6">
-          {/* Header Section */}
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
@@ -269,9 +304,27 @@ export default function DisasterFeed() {
               </p>
             </div>
             <div className="flex space-x-2">
-              <Button onClick={refreshReports} disabled={loading}>
+              <Select
+                value={filters.verification_status || "all"}
+                onValueChange={(value) => handleVerificationFilter(value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Verification Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VERIFICATION_STATUSES.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={handleRefresh} disabled={loading}>
                 {loading ? (
-                  <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
                 ) : (
                   "Refresh"
                 )}
@@ -359,32 +412,56 @@ export default function DisasterFeed() {
                 <TabsContent value="all" className="space-y-4">
                   {loading ? (
                     <div className="text-center p-4">
-                      <ReloadIcon className="animate-spin h-6 w-6 mx-auto" />
+                      <Loader2 className="animate-spin h-6 w-6 mx-auto" />
                     </div>
-                  ) : filteredReports(false).length === 0 ? (
+                  ) : reports.length === 0 ? (
                     <div className="text-center p-4 text-muted-foreground">
                       No reports found matching the selected filters
                     </div>
                   ) : (
-                    filteredReports(false).map((report) =>
-                      renderReportCard(report),
-                    )
+                    <div className="space-y-6">
+                      <div className="grid gap-6">
+                        {reports.map((report) => renderReportCard(report))}
+                      </div>
+
+                      {pagination && pagination.totalPages > 1 && (
+                        <div className="flex justify-center mt-6">
+                          <Pagination
+                            currentPage={pagination.currentPage}
+                            totalPages={pagination.totalPages}
+                            onPageChange={handlePageChange}
+                          />
+                        </div>
+                      )}
+                    </div>
                   )}
                 </TabsContent>
 
                 <TabsContent value="verified" className="space-y-4">
                   {loading ? (
                     <div className="text-center p-4">
-                      <ReloadIcon className="animate-spin h-6 w-6 mx-auto" />
+                      <Loader2 className="animate-spin h-6 w-6 mx-auto" />
                     </div>
-                  ) : filteredReports(true).length === 0 ? (
+                  ) : reports.length === 0 ? (
                     <div className="text-center p-4 text-muted-foreground">
                       No verified reports found matching the selected filters
                     </div>
                   ) : (
-                    filteredReports(true).map((report) =>
-                      renderReportCard(report),
-                    )
+                    <div className="space-y-6">
+                      <div className="grid gap-6">
+                        {reports.map((report) => renderReportCard(report))}
+                      </div>
+
+                      {pagination && pagination.totalPages > 1 && (
+                        <div className="flex justify-center mt-6">
+                          <Pagination
+                            currentPage={pagination.currentPage}
+                            totalPages={pagination.totalPages}
+                            onPageChange={handlePageChange}
+                          />
+                        </div>
+                      )}
+                    </div>
                   )}
                 </TabsContent>
               </Tabs>

@@ -15,8 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import api from "@/api/user/dash";
 import { useUser } from "@/provider/UserContext";
+import { warningApi } from "@/lib/warningApi";
 
 export const WarningActions = ({ warning, onUpdate }) => {
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -35,18 +35,15 @@ export const WarningActions = ({ warning, onUpdate }) => {
         update_text: updateText,
         updated_by: user._id,
         updated_at: new Date(),
+        severity_change: severityChange || undefined,
       };
 
-      if (severityChange) {
-        updateData.severity_change = severityChange;
-      }
-
-      const response = await api.post(
-        `/warning/${warning._id}/updates`,
+      const response = await warningApi.protected.addUpdate(
+        warning._id,
         updateData,
       );
 
-      onUpdate && onUpdate(response.data);
+      onUpdate && onUpdate(response);
       setIsUpdateOpen(false);
       setUpdateText("");
       setSeverityChange("");
@@ -63,18 +60,15 @@ export const WarningActions = ({ warning, onUpdate }) => {
 
     try {
       const resolutionData = {
-        status: "resolved",
-        resolved_by: user._id,
         resolution_notes: "Warning resolved through dashboard",
-        resolved_at: new Date(),
       };
 
-      const response = await api.post(
-        `/warning/${warning._id}/resolve`,
+      const response = await warningApi.protected.resolveWarning(
+        warning._id,
         resolutionData,
       );
 
-      onUpdate && onUpdate(response.data);
+      onUpdate && onUpdate(response);
     } catch (error) {
       console.error("Error resolving warning:", error);
     }

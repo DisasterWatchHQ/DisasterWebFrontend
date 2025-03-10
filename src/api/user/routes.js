@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import axios from "axios";
+import apiClient from '@/lib/api';
 
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
@@ -16,10 +16,7 @@ export async function GET(request) {
     const userId = request.nextUrl.searchParams.get("userId");
     const token = request.headers.get("Authorization");
 
-    const response = await api.get(`/users/${userId}`, {
-      headers: { Authorization: token },
-    });
-
+    const response = await apiClient.get(`/users/${userId}`);
     return NextResponse.json(response.data);
   } catch (error) {
     return NextResponse.json(
@@ -31,16 +28,12 @@ export async function GET(request) {
   }
 }
 
-export async function PUT(request) {
+export async function PATCH(request) {
   try {
     const data = await request.json();
     const { userId, ...updateData } = data;
-    const token = request.headers.get("Authorization");
 
-    const response = await api.put(`/users/${userId}`, updateData, {
-      headers: { Authorization: token },
-    });
-
+    const response = await apiClient.patch(`/users/${userId}`, updateData);
     return NextResponse.json(response.data);
   } catch (error) {
     return NextResponse.json(
@@ -53,12 +46,8 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     const userId = request.nextUrl.searchParams.get("userId");
-    const token = request.headers.get("Authorization");
 
-    const response = await api.delete(`/users/${userId}`, {
-      headers: { Authorization: token },
-    });
-
+    const response = await apiClient.delete(`/users/${userId}`);
     return NextResponse.json(response.data);
   } catch (error) {
     return NextResponse.json(

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2 } from "lucide-react";
-
+import { warningApi } from "@/lib/warningApi";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -60,7 +60,7 @@ const formSchema = z.object({
     )
     .min(1, "At least one location must be specified"),
   expected_duration: z.object({
-    start_time: z.string().optional(), 
+    start_time: z.string().optional(),
     end_time: z.string().optional(),
   }),
   images: z.array(z.string().url()).optional(),
@@ -123,7 +123,7 @@ const CreateWarningDialog = () => {
 
       const formattedData = {
         ...data,
-        created_by: user.id, 
+        created_by: user.id,
         expected_duration: {
           start_time: new Date(data.expected_duration.start_time),
           end_time: data.expected_duration.end_time
@@ -142,22 +142,8 @@ const CreateWarningDialog = () => {
         })),
       };
 
-      const response = await fetch(`${API_BASE_URL}/warning/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formattedData),
-      });
+      await warningApi.protected.createWarning(formattedData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response:", errorData);
-        throw new Error(errorData.error || "Failed to create warning");
-      }
-      const responseData = await response.json();
-      
       toast({
         title: "Success",
         description: "Warning has been created successfully.",
@@ -168,7 +154,7 @@ const CreateWarningDialog = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create warning. Please try again.",
+        description: error.response?.data?.error || "Failed to create warning.",
         variant: "destructive",
       });
     } finally {

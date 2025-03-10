@@ -10,6 +10,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import apiClient from "@/lib/api";
+import { getCurrentUser } from "@/api/auth/auth";
+import { authApi } from "@/lib/authApi";
 
 export function ChangePassword({ open, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -28,21 +31,27 @@ export function ChangePassword({ open, onClose }) {
       setIsLoading(false);
       return;
     }
+
     try {
-      // Add API call here to handle password reset request
-      // const response = await fetch('/api/reset-password', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData),
-      // });
+      const user = authApi.getCurrentUser();
+      if (!user?.id) {
+        throw new Error("User not authenticated");
+      }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await authApi.protected.changePassword(user.id, {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
 
-      toast.success("Password reset request sent successfully!");
+      toast.success("Password changed successfully!");
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
       onClose();
     } catch (error) {
-      toast.error("Failed to send password reset request");
+      toast.error(error.response?.data?.message || "Failed to change password");
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +86,7 @@ export function ChangePassword({ open, onClose }) {
             <Input
               id="newPassword"
               type="password"
-              placeholder="Enter your New password"
+              placeholder="Enter your new password"
               value={formData.newPassword}
               onChange={(e) =>
                 setFormData({ ...formData, newPassword: e.target.value })

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import api from "@/api/user/dash";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +29,9 @@ import {
 import axios from "axios";
 import { WarningActions } from "@/components/warning/WarningActions";
 import CreateWarningDialog from "@/components/report/CreateWarningDialog";
+import { warningApi } from "@/lib/warningApi";
+import { reportApi } from "@/lib/reportApi";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const [dashboardStats, setDashboardStats] = useState({
@@ -51,13 +53,13 @@ const AdminDashboard = () => {
     bySeverity: [],
     recentTrends: [],
   });
-
+  const { toast } = useToast();
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
 
   const fetchActiveWarnings = async () => {
     try {
-      const response = await api.get("/warning/active");
-      setActiveWarnings(response.data.data);
+      const response = await warningApi.public.getActiveWarnings();
+      setActiveWarnings(response.data);
     } catch (error) {
       console.error("Error fetching active warnings:", error);
     }
@@ -65,16 +67,14 @@ const AdminDashboard = () => {
 
   const fetchPendingReports = async () => {
     try {
-      const response = await api.get("/userReport/public", {
-        params: {
-          verification_status: "pending",
-          limit: 5,
-        },
+      const response = await reportApi.public.getFeedReports({
+        verification_status: "pending",
+        limit: 5,
       });
 
       const formattedReports = response.data.reports.map((report) => ({
         title: report.title,
-        id: report.id,
+        id: report.id || report._id,
         type: report.disaster_category,
         location: `${report.location.address.district}, ${report.location.address.city}`,
         timestamp: new Date(report.date_time).toLocaleString(),
@@ -89,12 +89,12 @@ const AdminDashboard = () => {
 
   const fetchVerificationStats = async () => {
     try {
-      const response = await api.get("/userReport/stats/verification");
+      const response = await reportApi.protected.getVerificationStats();
       setDashboardStats({
-        pendingCount: response.data.pendingCount,
-        verifiedToday: response.data.verifiedToday,
-        activeIncidents: response.data.activeIncidents,
-        avgVerificationTime: Math.round(response.data.avgVerificationTime),
+        pendingCount: response.pendingCount,
+        verifiedToday: response.verifiedToday,
+        activeIncidents: response.activeIncidents,
+        avgVerificationTime: Math.round(response.avgVerificationTime),
       });
     } catch (error) {
       console.error("Error fetching verification stats:", error);
@@ -103,8 +103,8 @@ const AdminDashboard = () => {
 
   const fetchReportStats = async () => {
     try {
-      const response = await api.get("/userReport/stats");
-      setReportStats(response.data);
+      const response = await reportApi.protected.getReportStats();
+      setReportStats(response);
     } catch (error) {
       console.error("Error fetching report stats:", error);
     }
@@ -112,21 +112,21 @@ const AdminDashboard = () => {
 
   const fetchReportAnalytics = async () => {
     try {
-      const response = await api.get("/userReport/stats/analytics");
+      const response = await reportApi.protected.getReportAnalytics();
 
-      const reportTypes = response.data.reportTypes.map((type) => ({
+      const reportTypes = response.reportTypes.map((type) => ({
         name: type.name || "Unknown",
         value: type.value || 0,
       }));
 
-      const formattedTrends = response.data.weeklyTrends.map((trend) => ({
+      const formattedTrends = response.weeklyTrends.map((trend) => ({
         date: trend.date,
         verified: trend.verified || 0,
         pending: trend.pending || 0,
         dismissed: trend.dismissed || 0,
       }));
 
-      const responseTime = response.data.responseTime.map((item) => ({
+      const responseTime = response.responseTime.map((item) => ({
         time: item.time,
         count: item.count,
       }));
@@ -161,18 +161,31 @@ const AdminDashboard = () => {
   const handleReportAction = async (reportId, action) => {
     try {
       if (action === "verify") {
-        await api.post(`/userReport/${reportId}/verify`, {
+        await reportApi.protected.verifyReport(reportId, {
           severity: "medium",
           notes: "Verified through dashboard",
         });
-      } else {
-        await api.post(`/userReport/${reportId}/dismiss`, {
+      } else if (action === "dismiss") {
+        await reportApi.protected.dismissReport(reportId, {
           notes: "Dismissed through dashboard",
         });
       }
-      fetchPendingReports();
+
+      await fetchPendingReports();
+      await fetchVerificationStats();
+
+      toast({
+        title: "Success",
+        description: `Report successfully ${action === "verify" ? "verified" : "dismissed"}.`,
+      });
     } catch (error) {
       console.error(`Error ${action}ing report:`, error);
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.message || `Failed to ${action} report.`,
+        variant: "destructive",
+      });
     }
   };
 

@@ -1,61 +1,37 @@
-import axios from "axios";
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+import { authApi } from '@/lib/authApi';
 
 export const createUser = async (userData) => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/user/register`,
-      userData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    return response.data;
+    return await authApi.public.register(userData);
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message;
-    throw new Error(errorMessage);
+    throw new Error(error.response?.data?.message || error.message);
   }
 };
 
 export const loginUser = async (credentials) => {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/user/login`,
-      credentials,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      },
-    );
-
-    if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-    }
-
-    return response.data;
+    return await authApi.public.login(credentials);
   } catch (error) {
-    const errorMessage = error.response?.data?.message || error.message;
-    throw new Error(errorMessage);
+    throw new Error(error.response?.data?.message || error.message);
   }
 };
 
-export const getCurrentUser = () => {
-  const userStr = localStorage.getItem("user");
-  return userStr ? JSON.parse(userStr) : null;
+export const forgotPassword = async (data) => {
+  try {
+    return await authApi.public.forgotPassword(data);
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
 };
 
-export const isAuthenticated = () => {
-  return !!localStorage.getItem("token");
+export const resetPassword = async (token, password) => {
+  try {
+    return await authApi.public.resetPassword(token, password);
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
 };
 
-export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-};
+export const getCurrentUser = authApi.getCurrentUser;
+export const isAuthenticated = authApi.isAuthenticated;
+export const logout = authApi.logout;

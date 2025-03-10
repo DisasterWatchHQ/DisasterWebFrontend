@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { reportApi } from "@/lib/reportApi";
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -50,8 +51,6 @@ const formSchema = z.object({
 export default function ReportPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -75,17 +74,7 @@ export default function ReportPage() {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch(`${API_BASE_URL}/userReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit report");
-      }
+      const response = await reportApi.submitReport(data);
 
       toast({
         title: "Success",
@@ -96,7 +85,9 @@ export default function ReportPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to submit report. Please try again.",
+        description:
+          error.response?.data?.error ||
+          "Failed to submit report. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -132,7 +123,10 @@ export default function ReportPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Disaster Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select disaster type" />
