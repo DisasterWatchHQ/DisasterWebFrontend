@@ -6,10 +6,8 @@ import Footer from "@/components/common/Footer";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/provider/UserContext";
 import { Toaster } from "@/components/ui/toaster";
-import { NotificationProvider } from "@/provider/NotificationContext";
 import { Suspense } from "react";
 import Loading from "@/components/Loading";
-import SubscribeButton from "@/components/SubscribeButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,17 +40,14 @@ export default function RootLayout({ children }) {
             enableSystem
             disableTransitionOnChange
           >
-            <NotificationProvider>
               <LayoutWrapper header={header} footer={footer}>
                 <Suspense fallback={<Loading />}>
                   <main className="flex-grow container min-w-full">
                     {children}
                   </main>
-                  <SubscribeButton />
                 </Suspense>
               </LayoutWrapper>
               <Toaster />
-            </NotificationProvider>
           </ThemeProvider>
         </UserProvider>
       </body>
