@@ -1,73 +1,66 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import { reportApi } from '@/lib/reportApi';
 
-export const useReports = () => {
+export const useReports = (requireAuth = false) => {
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
     disaster_category: "",
-    verified_only: false,
+    status: "active",
     district: "",
+    verification_status: ""
   });
-  
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
-
-      const queryParams = new URLSearchParams({
-        page: filters.page.toString(),
-        limit: filters.limit.toString(),
-        verified_only: filters.verified_only.toString(),
-      });
-
-      if (filters.disaster_category) {
-        queryParams.append("disaster_category", filters.disaster_category);
-      }
-
-      if (filters.district && filters.district !== "all") {
-        queryParams.append("district", filters.district);
-      }
-
-      const [reportsResponse, statsResponse] = await Promise.all([
-        axios.get(
-          `${API_BASE_URL}/userReport/reports?${queryParams}`,
-        ),
-        axios.get(`${API_BASE_URL}/userReport/feedstats`),
-      ]);
-
-      const mappedReports = reportsResponse.data.data.reports.map((report) => ({
-        id: report.id || report._id,
-        title: report.title,
-        description: report.description,
-        disaster_category: report.disaster_category,
-        location: report.location,
-        district: report.location?.address?.district,
-        timestamp: report.date_time,
-        images: report.images || [],
-        verified: report.verification_status === "verified",
-        verification_status: report.verification_status,
-        severity: report.verification?.severity || "low",
-      }));
-
-      setReports(mappedReports);
-      setStats(statsResponse.data.data);
       setError(null);
+
+      if (requireAuth) {
+        // Fetch data for authenticated users
+        const [
+          reportsResponse,
+          statsResponse,
+          verificationStatsResponse,
+          analyticsResponse
+        ] = await Promise.all([
+          reportApi.protected.getVerifiedReports(filters),
+          reportApi.protected.getReportStats(),
+          reportApi.protected.getVerificationStats(),
+          reportApi.protected.getReportAnalytics()
+        ]);
+
+        setReports(reportsResponse.data.reports);
+        setStats({
+          ...statsResponse,
+          verification: verificationStatsResponse
+        });
+        setAnalytics(analyticsResponse);
+      } else {
+        // Fetch public data
+        const [reportsResponse, feedStatsResponse] = await Promise.all([
+          reportApi.public.getFeedReports(filters),
+          reportApi.public.getFeedStats()
+        ]);
+
+        setReports(reportsResponse.data.reports);
+        setStats({ feed: feedStatsResponse });
+      }
     } catch (err) {
       console.error("Error fetching reports:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [filters, API_BASE_URL]);
+  }, [filters, requireAuth]);
 
   const updateFilters = (newFilters) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   useEffect(() => {
@@ -77,10 +70,16 @@ export const useReports = () => {
   return {
     reports,
     stats,
+    analytics,
     loading,
     error,
     filters,
     updateFilters,
     refreshReports: fetchReports,
+    pagination: {
+      currentPage: filters.page,
+      totalPages: Math.ceil((reports?.length || 0) / filters.limit),
+      totalItems: reports?.length || 0
+    }
   };
 };

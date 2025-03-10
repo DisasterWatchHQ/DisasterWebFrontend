@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
+import { reportApi } from '@/lib/reportApi';
 
 export const useLiveUpdates = () => {
   const [updates, setUpdates] = useState([]);
@@ -9,52 +7,39 @@ export const useLiveUpdates = () => {
 
   const fetchUpdates = async () => {
     try {
-      const updatesResponse = await axios.get(
-        `${API_BASE_URL}/userReport/updates`,
-        {
-          params: {
-            verified_only: true,
-            limit: 5,
-          },
-        },
-      );
+      const [updatesResponse, feedStatsResponse] = await Promise.all([
+        reportApi.getFeedUpdates(30), // Get last 30 minutes of updates
+        reportApi.getFeedStats()
+      ]);
 
-      setUpdates(
-        updatesResponse.data.data.updates.map((update) => ({
-          message: `${update.title} - ${update.location}`,
-          timestamp: update.date,
-        })),
-      );
+      if (updatesResponse.success) {
+        setUpdates(updatesResponse.data.updates);
+      }
 
-      const warningsResponse = await axios.get(
-        `${API_BASE_URL}/warning/active`,
-      );
-      if (warningsResponse.data.success) {
-        setActiveWarnings(
-          warningsResponse.data.data.map((warning) => ({
+      if (feedStatsResponse.success) {
+        // Handle active warnings from feed stats
+        const activeWarnings = feedStatsResponse.data.warningStats
+          .filter(w => w.status === 'active')
+          .map(warning => ({
             id: warning._id,
             title: warning.title,
-            description: warning.description,
             disaster_category: warning.disaster_category,
             severity: warning.severity,
             affected_locations: warning.affected_locations,
             status: warning.status,
-            created_at: warning.created_at,
-            expected_duration: warning.expected_duration,
-            updates: warning.updates,
-            created_by: warning.created_by,
-            response_actions: warning.response_actions,
-          })),
-        );
+            created_at: warning.created_at
+          }));
+
+        setActiveWarnings(activeWarnings);
       }
     } catch (error) {
-      console.error("Error fetching updates and warnings:", error);
+      console.error("Error fetching updates:", error);
     }
   };
 
   useEffect(() => {
     fetchUpdates();
-    const interval = setInterval(fetchUpdates, 30000);
+    const interval = setInterval(fetchUpdates, 30000); // Poll every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
