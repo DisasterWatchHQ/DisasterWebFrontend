@@ -1,20 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   GoogleMap,
   useJsApiLoader,
   Marker,
   InfoWindow,
+  Circle,
 } from "@react-google-maps/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Search,
-  AlertTriangle,
-  Locate,
-} from "lucide-react";
+import { Search, AlertTriangle, Locate } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,8 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { warningApi } from "@/lib/warningApi";
+import { Badge } from "@/components/ui/badge";
 
-const libraries = ['places'];
+const libraries = ["places"];
 
 const SRI_LANKA_BOUNDS = {
   north: 9.83,
@@ -34,56 +33,68 @@ const SRI_LANKA_BOUNDS = {
 
 const SRI_LANKA_CENTER = { lat: 7.8731, lng: 80.7718 };
 
-const disasterTypes = [
-  { id: "all", name: "All Types" },
-  { id: "earthquake", name: "Earthquake" },
-  { id: "flood", name: "Flood" },
-  { id: "fire", name: "Fire" },
-  { id: "hurricane", name: "Hurricane" },
-];
+const SEVERITY_COLORS = {
+  low: "#3b82f6", // blue
+  medium: "#eab308", // yellow
+  high: "#f97316", // orange
+  critical: "#ef4444", // red
+};
 
-const sampleDisasters = [
-  {
-    id: 1,
-    position: { lat: 6.9271, lng: 79.8612 },
-    title: "Flood Warning",
-    description: "Severe flooding in Colombo area",
-    type: "flood",
-    severity: "high",
-    timestamp: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    position: { lat: 7.2906, lng: 80.6337 },
-    title: "Landslide Risk",
-    description: "Potential landslide warning",
-    type: "flood",
-    severity: "medium",
-    timestamp: new Date().toISOString(),
-  },
-];
+const SEVERITY_RADIUS = {
+  low: 1000, // 1km
+  medium: 2000, // 2km
+  high: 5000, // 5km
+  critical: 10000, // 10km
+};
 
 const containerStyle = {
-  width: '100%',
-  height: '600px',
-  borderRadius: '0.5rem'
+  width: "100%",
+  height: "600px",
+  borderRadius: "0.5rem",
 };
 
 export default function Map() {
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries,
   });
 
   const [center, setCenter] = useState(SRI_LANKA_CENTER);
   const [zoom, setZoom] = useState(8);
-  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [selectedWarning, setSelectedWarning] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [disasters, setDisasters] = useState(sampleDisasters);
-  const [selectedType, setSelectedType] = useState("all");
-  const [userLocation, setUserLocation] = useState(null);
+  const [activeWarnings, setActiveWarnings] = useState([]);
+  const [isWarningsLoading, setIsWarningsLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
+
+  useEffect(() => {
+    fetchActiveWarnings();
+    // Fetch warnings every 5 minutes
+    const interval = setInterval(fetchActiveWarnings, 300000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchActiveWarnings = async () => {
+    try {
+      setIsWarningsLoading(true);
+      const response = await warningApi.public.getActiveWarnings();
+      console.log("Raw response:", response); // Debug log
+
+      // Ensure we're getting an array of warnings
+      const warnings = response.data?.warnings || [];
+      console.log("Processed warnings:", warnings); // Debug log
+
+      setActiveWarnings(Array.isArray(warnings) ? warnings : []);
+    } catch (error) {
+      console.error("Error fetching warnings:", error);
+      setLocationError("Failed to fetch active warnings");
+      setActiveWarnings([]);
+    } finally {
+      setIsWarningsLoading(false);
+    }
+  };
 
   const mapOptions = {
     mapTypeControl: true,
@@ -100,20 +111,19 @@ export default function Map() {
   const getUserLocation = () => {
     setIsLoading(true);
     setLocationError("");
-  
+
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser.");
       setIsLoading(false);
       return;
     }
-  
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const location = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         };
-        console.log("User location obtained:", location);
         setUserLocation(location);
         setCenter(location);
         setZoom(12);
@@ -121,31 +131,11 @@ export default function Map() {
       },
       (error) => {
         console.error("Geolocation error:", error);
-        let errorMessage;
-        switch (error.code) {
-          case 1:
-            errorMessage = "Permission denied. Please enable location access.";
-            break;
-          case 2:
-            errorMessage = "Position unavailable. Please try again later.";
-            break;
-          case 3:
-            errorMessage = "Request timed out. Retry or ensure location services are active.";
-            break;
-          default:
-            errorMessage = "An unknown error occurred.";
-        }
-        setLocationError(errorMessage);
+        setLocationError("Failed to get your location");
         setIsLoading(false);
       },
-      {
-        enableHighAccuracy: true, 
-        timeout: 15000, 
-        maximumAge: 0,
-      }
     );
   };
-
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -157,17 +147,17 @@ export default function Map() {
       const geocoder = new window.google.maps.Geocoder();
       const response = await new Promise((resolve, reject) => {
         geocoder.geocode(
-          { 
+          {
             address: `${searchQuery}, Sri Lanka`,
-            componentRestrictions: { country: 'LK' }
-          }, 
+            componentRestrictions: { country: "LK" },
+          },
           (results, status) => {
             if (status === "OK") {
               resolve(results);
             } else {
               reject(status);
             }
-          }
+          },
         );
       });
 
@@ -184,8 +174,36 @@ export default function Map() {
     }
   };
 
-  const filteredDisasters = disasters.filter(
-    (disaster) => selectedType === "all" || disaster.type === selectedType
+  const renderWarningInfo = (warning) => (
+    <div className="p-2 max-w-sm">
+      <h3 className="font-bold text-lg">{warning.title}</h3>
+      <div className="flex gap-2 my-2">
+        <Badge>{warning.disaster_category}</Badge>
+        <Badge
+          variant={
+            warning.severity === "critical"
+              ? "destructive"
+              : warning.severity === "high"
+                ? "warning"
+                : "default"
+          }
+        >
+          {warning.severity}
+        </Badge>
+      </div>
+      <p className="text-sm mb-2">{warning.description}</p>
+      <p className="text-xs text-muted-foreground">
+        Created: {new Date(warning.created_at).toLocaleString()}
+      </p>
+      {warning.updates?.length > 0 && (
+        <div className="mt-2 border-t pt-2">
+          <p className="text-sm font-medium">Latest Update:</p>
+          <p className="text-sm">
+            {warning.updates[warning.updates.length - 1].update_text}
+          </p>
+        </div>
+      )}
+    </div>
   );
 
   if (loadError) {
@@ -219,29 +237,15 @@ export default function Map() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Sri Lanka Disaster Map</CardTitle>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={getUserLocation}
-                disabled={isLoading}
-              >
-                <Locate className="h-4 w-4 mr-2" />
-                {isLoading ? "Loading..." : "My Location"}
-              </Button>
-              <Select value={selectedType} onValueChange={setSelectedType}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {disasterTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <CardTitle>Active Disaster Warnings</CardTitle>
+            <Button
+              variant="outline"
+              onClick={getUserLocation}
+              disabled={isLoading}
+            >
+              <Locate className="h-4 w-4 mr-2" />
+              {isLoading ? "Loading..." : "My Location"}
+            </Button>
           </div>
           {locationError && (
             <div className="mt-2 text-red-500 text-sm flex items-center gap-2">
@@ -285,42 +289,94 @@ export default function Map() {
                   text: "You",
                   color: "#ffffff",
                   fontSize: "14px",
-                  fontWeight: "bold"
+                  fontWeight: "bold",
                 }}
               />
             )}
 
-            {filteredDisasters.map((disaster) => (
-              <Marker
-                key={disaster.id}
-                position={disaster.position}
-                label={{
-                  text: disaster.title,
-                  color: "#ffffff",
-                  fontSize: "14px"
-                }}
-                onClick={() => setSelectedMarker(disaster)}
-              />
-            ))}
+            {!isWarningsLoading &&
+              Array.isArray(activeWarnings) &&
+              activeWarnings.length > 0 &&
+              activeWarnings.map((warning) => {
+                if (!warning?.affected_locations?.[0]?.coordinates) return null;
 
-            {selectedMarker && (
-              <InfoWindow
-                position={selectedMarker.position}
-                onCloseClick={() => setSelectedMarker(null)}
-              >
-                <div>
-                  <h3 className="font-bold">{selectedMarker.title}</h3>
-                  <p>{selectedMarker.description}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(selectedMarker.timestamp).toLocaleString()}
-                  </p>
-                  <div className="mt-2">
-                    <Button size="sm">View Details</Button>
+                const position = {
+                  lat: parseFloat(
+                    warning.affected_locations[0].coordinates.latitude,
+                  ),
+                  lng: parseFloat(
+                    warning.affected_locations[0].coordinates.longitude,
+                  ),
+                };
+
+                // Validate position
+                if (isNaN(position.lat) || isNaN(position.lng)) return null;
+
+                return (
+                  <div key={warning.id || warning._id}>
+                    <Marker
+                      position={position}
+                      onClick={() => setSelectedWarning(warning)}
+                      icon={{
+                        path: google.maps.SymbolPath.WARNING,
+                        fillColor:
+                          SEVERITY_COLORS[warning.severity] ||
+                          SEVERITY_COLORS.medium,
+                        fillOpacity: 1,
+                        strokeWeight: 1,
+                        strokeColor: "#000000",
+                        scale: 7,
+                      }}
+                    />
+                    <Circle
+                      center={position}
+                      radius={
+                        SEVERITY_RADIUS[warning.severity] ||
+                        SEVERITY_RADIUS.medium
+                      }
+                      options={{
+                        fillColor: SEVERITY_COLORS[warning.severity],
+                        fillOpacity: 0.2,
+                        strokeColor: SEVERITY_COLORS[warning.severity],
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                      }}
+                    />
                   </div>
-                </div>
-              </InfoWindow>
-            )}
+                );
+              })}
+
+            {selectedWarning &&
+              selectedWarning.affected_locations?.[0]?.coordinates && (
+                <InfoWindow
+                  position={{
+                    lat: selectedWarning.affected_locations[0].coordinates
+                      .latitude,
+                    lng: selectedWarning.affected_locations[0].coordinates
+                      .longitude,
+                  }}
+                  onCloseClick={() => setSelectedWarning(null)}
+                >
+                  {renderWarningInfo(selectedWarning)}
+                </InfoWindow>
+              )}
           </GoogleMap>
+
+          {isWarningsLoading && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background/80 p-4 rounded-md">
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span>Loading warnings...</span>
+              </div>
+            </div>
+          )}
+
+          {!isWarningsLoading &&
+            (!Array.isArray(activeWarnings) || activeWarnings.length === 0) && (
+              <div className="text-center py-4 text-muted-foreground">
+                No active warnings found
+              </div>
+            )}
         </CardContent>
       </Card>
     </div>
