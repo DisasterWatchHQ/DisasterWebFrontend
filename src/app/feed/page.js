@@ -12,7 +12,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
@@ -33,31 +33,11 @@ import {
 import { Pagination } from "@/components/ui/pagination";
 
 const DISTRICTS = [
-  "Colombo",
-  "Gampaha",
-  "Kalutara",
-  "Kandy",
-  "Matale",
-  "Nuwara Eliya",
-  "Kegalle",
-  "Ratnapura",
-  "Galle",
-  "Matara",
-  "Hambantota",
-  "Jaffna",
-  "Kilinochchi",
-  "Mannar",
-  "Vavuniya",
-  "Mullaitivu",
-  "Batticaloa",
-  "Ampara",
-  "Trincomalee",
-  "Kurunegala",
-  "Puttalam",
-  "Anuradhapura",
-  "Polonnaruwa",
-  "Badulla",
-  "Monaragala",
+  "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", "Nuwara Eliya",
+  "Kegalle", "Ratnapura", "Galle", "Matara", "Hambantota", "Jaffna",
+  "Kilinochchi", "Mannar", "Vavuniya", "Mullaitivu", "Batticaloa",
+  "Ampara", "Trincomalee", "Kurunegala", "Puttalam", "Anuradhapura",
+  "Polonnaruwa", "Badulla", "Monaragala",
 ];
 
 const VERIFICATION_STATUSES = [
@@ -76,7 +56,6 @@ export default function DisasterFeed() {
     filters,
     updateFilters,
     refreshReports,
-    stats,
     pagination,
   } = useReports();
   const { updates, activeWarnings } = useLiveUpdates();
@@ -105,6 +84,7 @@ export default function DisasterFeed() {
       disaster_category: "",
       district: "",
       verification_status: "",
+      verified_only: false,
       page: 1,
     });
   };
@@ -125,6 +105,36 @@ export default function DisasterFeed() {
     }
   };
 
+  const handleSocialShare = (report, platform) => {
+    const shareText = `${report.title} - ${report.description}`;
+    const shareUrl = window.location.href;
+
+    switch (platform) {
+      case "twitter":
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            shareText
+          )}&url=${encodeURIComponent(shareUrl)}`,
+          "_blank"
+        );
+        break;
+      case "facebook":
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            shareUrl
+          )}`,
+          "_blank"
+        );
+        break;
+      case "whatsapp":
+        window.open(
+          `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
+          "_blank"
+        );
+        break;
+    }
+  };
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
@@ -135,38 +145,6 @@ export default function DisasterFeed() {
       </div>
     );
   }
-
-  const handleSocialShare = (report, platform) => {
-    const shareText = `${report.title} - ${report.description}`;
-    const shareUrl = window.location.href;
-
-    switch (platform) {
-      case "twitter":
-        window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-            shareText,
-          )}&url=${encodeURIComponent(shareUrl)}`,
-          "_blank",
-        );
-        break;
-      case "facebook":
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-            shareUrl,
-          )}`,
-          "_blank",
-        );
-        break;
-      case "whatsapp":
-        window.open(
-          `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
-          "_blank",
-        );
-        break;
-      default:
-        break;
-    }
-  };
 
   const renderReportCard = (report) => (
     <Card key={report.id || report._id}>
@@ -212,8 +190,8 @@ export default function DisasterFeed() {
               report.verification_status === "verified"
                 ? "default"
                 : report.verification_status === "dismissed"
-                  ? "destructive"
-                  : "outline"
+                ? "destructive"
+                : "outline"
             }
           >
             {report.verification_status}
@@ -224,8 +202,8 @@ export default function DisasterFeed() {
                 report.verification.severity === "critical"
                   ? "destructive"
                   : report.verification.severity === "high"
-                    ? "warning"
-                    : "default"
+                  ? "warning"
+                  : "default"
               }
             >
               {report.verification.severity}
@@ -267,8 +245,8 @@ export default function DisasterFeed() {
                         warning.severity === "critical"
                           ? "bg-destructive text-destructive-foreground"
                           : warning.severity === "high"
-                            ? "bg-warning text-warning-foreground"
-                            : "bg-warning-foreground/10"
+                          ? "bg-warning text-warning-foreground"
+                          : "bg-warning-foreground/10"
                       }`}
                     >
                       {warning.severity}
@@ -335,135 +313,105 @@ export default function DisasterFeed() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-3">
               <Tabs
-                defaultValue="all"
-                onValueChange={(value) =>
-                  handleFilterChange("verified_only", value === "verified")
-                }
+                value={filters.verified_only ? "verified" : "all"}
+                onValueChange={(value) => {
+                  handleFilterChange("verified_only", value === "verified");
+                  handleFilterChange("verification_status", "");
+                }}
               >
                 <TabsList>
                   <TabsTrigger value="all">All Reports</TabsTrigger>
                   <TabsTrigger value="verified">Verified Only</TabsTrigger>
                 </TabsList>
 
-                <div className="mb-4 mt-2">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex space-x-2">
-                        {[
-                          "flood",
-                          "fire",
-                          "earthquake",
-                          "landslide",
-                          "cyclone",
-                        ].map((category) => (
-                          <Badge
-                            key={category}
-                            variant={
-                              filters.disaster_category === category
-                                ? "default"
-                                : "outline"
-                            }
-                            className="cursor-pointer"
-                            onClick={() =>
+                <div className="mt-4">
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="flex space-x-2">
+                          {["flood", "fire", "earthquake", "landslide", "cyclone"].map(
+                            (category) => (
+                              <Badge
+                                key={category}
+                                variant={
+                                  filters.disaster_category === category
+                                    ? "default"
+                                    : "outline"
+                                }
+                                className="cursor-pointer"
+                                onClick={() =>
+                                  handleFilterChange(
+                                    "disaster_category",
+                                    filters.disaster_category === category
+                                      ? ""
+                                      : category
+                                  )
+                                }
+                              >
+                                {category.charAt(0).toUpperCase() +
+                                  category.slice(1)}
+                              </Badge>
+                            )
+                          )}
+                        </div>
+
+                        <div className="flex space-x-2">
+                          <Select
+                            value={filters.district || "all"}
+                            onValueChange={(value) =>
                               handleFilterChange(
-                                "disaster_category",
-                                filters.disaster_category === category
-                                  ? ""
-                                  : category,
+                                "district",
+                                value === "all" ? "" : value
                               )
                             }
                           >
-                            {category.charAt(0).toUpperCase() +
-                              category.slice(1)}
-                          </Badge>
-                        ))}
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select District" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Districts</SelectItem>
+                              {DISTRICTS.map((district) => (
+                                <SelectItem key={district} value={district}>
+                                  {district}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-
-                      <div className="flex space-x-2">
-                        <Select
-                          value={filters.district || "all"}
-                          onValueChange={(value) =>
-                            handleFilterChange(
-                              "district",
-                              value === "all" ? "" : value,
-                            )
-                          }
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select District" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Districts</SelectItem>
-                            {DISTRICTS.map((district) => (
-                              <SelectItem key={district} value={district}>
-                                {district}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <Button variant="outline" size="sm" onClick={clearFilters}>
+                        Clear Filters
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm" onClick={clearFilters}>
-                      Clear Filters
-                    </Button>
                   </div>
+
+                  {loading ? (
+                    <div className="text-center p-4">
+                      <Loader2 className="animate-spin h-6 w-6 mx-auto" />
+                    </div>
+                  ) : reports.length === 0 ? (
+                    <div className="text-center p-4 text-muted-foreground">
+                      No {filters.verified_only ? "verified " : ""}reports found
+                      matching the selected filters
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="grid gap-6">
+                        {reports.map((report) => renderReportCard(report))}
+                      </div>
+
+                      {pagination && pagination.totalPages > 1 && (
+                        <div className="flex justify-center mt-6">
+                          <Pagination
+                            currentPage={pagination.currentPage}
+                            totalPages={pagination.totalPages}
+                            onPageChange={handlePageChange}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-
-                <TabsContent value="all" className="space-y-4">
-                  {loading ? (
-                    <div className="text-center p-4">
-                      <Loader2 className="animate-spin h-6 w-6 mx-auto" />
-                    </div>
-                  ) : reports.length === 0 ? (
-                    <div className="text-center p-4 text-muted-foreground">
-                      No reports found matching the selected filters
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="grid gap-6">
-                        {reports.map((report) => renderReportCard(report))}
-                      </div>
-
-                      {pagination && pagination.totalPages > 1 && (
-                        <div className="flex justify-center mt-6">
-                          <Pagination
-                            currentPage={pagination.currentPage}
-                            totalPages={pagination.totalPages}
-                            onPageChange={handlePageChange}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="verified" className="space-y-4">
-                  {loading ? (
-                    <div className="text-center p-4">
-                      <Loader2 className="animate-spin h-6 w-6 mx-auto" />
-                    </div>
-                  ) : reports.length === 0 ? (
-                    <div className="text-center p-4 text-muted-foreground">
-                      No verified reports found matching the selected filters
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="grid gap-6">
-                        {reports.map((report) => renderReportCard(report))}
-                      </div>
-
-                      {pagination && pagination.totalPages > 1 && (
-                        <div className="flex justify-center mt-6">
-                          <Pagination
-                            currentPage={pagination.currentPage}
-                            totalPages={pagination.totalPages}
-                            onPageChange={handlePageChange}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </TabsContent>
               </Tabs>
             </div>
           </div>

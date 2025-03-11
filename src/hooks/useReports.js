@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { reportApi } from '@/lib/reportApi';
+import { reportApi } from "@/lib/reportApi";
 
 export const useReports = (requireAuth = false) => {
   const [reports, setReports] = useState([]);
@@ -13,7 +13,8 @@ export const useReports = (requireAuth = false) => {
     disaster_category: "",
     status: "active",
     district: "",
-    verification_status: ""
+    verification_status: "",
+    verified_only: false,
   });
 
   const fetchReports = useCallback(async () => {
@@ -27,25 +28,30 @@ export const useReports = (requireAuth = false) => {
           reportsResponse,
           statsResponse,
           verificationStatsResponse,
-          analyticsResponse
+          analyticsResponse,
         ] = await Promise.all([
           reportApi.protected.getVerifiedReports(filters),
           reportApi.protected.getReportStats(),
           reportApi.protected.getVerificationStats(),
-          reportApi.protected.getReportAnalytics()
+          reportApi.protected.getReportAnalytics(),
         ]);
 
         setReports(reportsResponse.data.reports);
         setStats({
           ...statsResponse,
-          verification: verificationStatsResponse
+          verification: verificationStatsResponse,
         });
         setAnalytics(analyticsResponse);
       } else {
-        // Fetch public data
+        // Modify the public API call to include verified_only
         const [reportsResponse, feedStatsResponse] = await Promise.all([
-          reportApi.public.getFeedReports(filters),
-          reportApi.public.getFeedStats()
+          reportApi.public.getFeedReports({
+            ...filters,
+            verification_status: filters.verified_only
+              ? "verified"
+              : filters.verification_status,
+          }),
+          reportApi.public.getFeedStats(),
         ]);
 
         setReports(reportsResponse.data.reports);
@@ -60,7 +66,7 @@ export const useReports = (requireAuth = false) => {
   }, [filters, requireAuth]);
 
   const updateFilters = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   useEffect(() => {
@@ -79,7 +85,7 @@ export const useReports = (requireAuth = false) => {
     pagination: {
       currentPage: filters.page,
       totalPages: Math.ceil((reports?.length || 0) / filters.limit),
-      totalItems: reports?.length || 0
-    }
+      totalItems: reports?.length || 0,
+    },
   };
 };
