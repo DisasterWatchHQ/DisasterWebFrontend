@@ -33,11 +33,31 @@ import {
 import { Pagination } from "@/components/ui/pagination";
 
 const DISTRICTS = [
-  "Colombo", "Gampaha", "Kalutara", "Kandy", "Matale", "Nuwara Eliya",
-  "Kegalle", "Ratnapura", "Galle", "Matara", "Hambantota", "Jaffna",
-  "Kilinochchi", "Mannar", "Vavuniya", "Mullaitivu", "Batticaloa",
-  "Ampara", "Trincomalee", "Kurunegala", "Puttalam", "Anuradhapura",
-  "Polonnaruwa", "Badulla", "Monaragala",
+  "Colombo",
+  "Gampaha",
+  "Kalutara",
+  "Kandy",
+  "Matale",
+  "Nuwara Eliya",
+  "Kegalle",
+  "Ratnapura",
+  "Galle",
+  "Matara",
+  "Hambantota",
+  "Jaffna",
+  "Kilinochchi",
+  "Mannar",
+  "Vavuniya",
+  "Mullaitivu",
+  "Batticaloa",
+  "Ampara",
+  "Trincomalee",
+  "Kurunegala",
+  "Puttalam",
+  "Anuradhapura",
+  "Polonnaruwa",
+  "Badulla",
+  "Monaragala",
 ];
 
 const VERIFICATION_STATUSES = [
@@ -58,7 +78,11 @@ export default function DisasterFeed() {
     refreshReports,
     pagination,
   } = useReports();
-  const { updates, activeWarnings } = useLiveUpdates();
+  const {
+    activeWarnings,
+    loading: warningsLoading,
+    error: warningsError,
+  } = useLiveUpdates();
   const [selectedWarning, setSelectedWarning] = useState(null);
 
   const handlePageChange = (page) => {
@@ -113,23 +137,23 @@ export default function DisasterFeed() {
       case "twitter":
         window.open(
           `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-            shareText
+            shareText,
           )}&url=${encodeURIComponent(shareUrl)}`,
-          "_blank"
+          "_blank",
         );
         break;
       case "facebook":
         window.open(
           `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-            shareUrl
+            shareUrl,
           )}`,
-          "_blank"
+          "_blank",
         );
         break;
       case "whatsapp":
         window.open(
           `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
-          "_blank"
+          "_blank",
         );
         break;
     }
@@ -190,8 +214,8 @@ export default function DisasterFeed() {
               report.verification_status === "verified"
                 ? "default"
                 : report.verification_status === "dismissed"
-                ? "destructive"
-                : "outline"
+                  ? "destructive"
+                  : "outline"
             }
           >
             {report.verification_status}
@@ -202,8 +226,8 @@ export default function DisasterFeed() {
                 report.verification.severity === "critical"
                   ? "destructive"
                   : report.verification.severity === "high"
-                  ? "warning"
-                  : "default"
+                    ? "warning"
+                    : "default"
               }
             >
               {report.verification.severity}
@@ -224,50 +248,67 @@ export default function DisasterFeed() {
 
   return (
     <div className="min-h-screen w-full bg-background">
-      {activeWarnings.length > 0 && (
-        <div className="bg-warning/20 p-2">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex space-x-4 px-4">
-              {activeWarnings.map((warning) => (
-                <Badge
-                  key={warning.id}
-                  variant="warning"
-                  className="animate-pulse flex items-center gap-2 cursor-pointer hover:bg-warning/30"
-                  onClick={() => setSelectedWarning(warning)}
-                >
-                  <span className="font-bold">
-                    {warning.disaster_category.toUpperCase()}:
-                  </span>
-                  <span>{warning.title}</span>
-                  {warning.severity && (
-                    <span
-                      className={`ml-2 px-1 py-0.5 text-xs rounded ${
-                        warning.severity === "critical"
-                          ? "bg-destructive text-destructive-foreground"
-                          : warning.severity === "high"
-                          ? "bg-warning text-warning-foreground"
-                          : "bg-warning-foreground/10"
-                      }`}
-                    >
-                      {warning.severity}
-                    </span>
-                  )}
-                  {warning.affected_locations && (
-                    <span className="text-xs">
-                      ({warning.affected_locations[0].address.district})
-                    </span>
-                  )}
-                </Badge>
-              ))}
-            </div>
-          </ScrollArea>
+      {warningsError && (
+        <div className="bg-destructive/20 p-2 text-center text-sm">
+          Error loading warnings. Please refresh the page.
         </div>
       )}
-
+      {!warningsError && warningsLoading ? (
+        <div className="bg-warning/20 p-2">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Loading warnings...
+          </div>
+        </div>
+      ) : (
+        /* Warning display */
+        activeWarnings?.length > 0 && (
+          <div className="bg-warning/20 p-2">
+            <ScrollArea className="w-full whitespace-nowrap">
+              <div className="flex space-x-4 px-4">
+                {activeWarnings.map((warning) => (
+                  <Badge
+                    key={warning._id}
+                    variant="warning"
+                    className="animate-pulse flex items-center gap-2 cursor-pointer hover:bg-warning/30"
+                    onClick={() => setSelectedWarning(warning)}
+                  >
+                    <span className="font-bold">
+                      {warning.disaster_category?.toUpperCase()}:
+                    </span>
+                    <span>{warning.title}</span>
+                    {warning.severity && (
+                      <span
+                        className={`ml-2 px-1 py-0.5 text-xs rounded ${
+                          warning.severity === "critical"
+                            ? "bg-destructive text-destructive-foreground"
+                            : warning.severity === "high"
+                              ? "bg-warning text-warning-foreground"
+                              : "bg-warning-foreground/10"
+                        }`}
+                      >
+                        {warning.severity}
+                      </span>
+                    )}
+                    {warning.affected_locations?.[0]?.address?.district && (
+                      <span className="text-xs">
+                        ({warning.affected_locations[0].address.district})
+                      </span>
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )
+      )}
+      
       <WarningDetailDialog
         warning={selectedWarning}
         open={!!selectedWarning}
-        onClose={() => setSelectedWarning(null)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedWarning(null);
+        }}
       />
 
       <main className="w-full h-full p-6">
@@ -329,30 +370,34 @@ export default function DisasterFeed() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-2">
                         <div className="flex space-x-2">
-                          {["flood", "fire", "earthquake", "landslide", "cyclone"].map(
-                            (category) => (
-                              <Badge
-                                key={category}
-                                variant={
+                          {[
+                            "flood",
+                            "fire",
+                            "earthquake",
+                            "landslide",
+                            "cyclone",
+                          ].map((category) => (
+                            <Badge
+                              key={category}
+                              variant={
+                                filters.disaster_category === category
+                                  ? "default"
+                                  : "outline"
+                              }
+                              className="cursor-pointer"
+                              onClick={() =>
+                                handleFilterChange(
+                                  "disaster_category",
                                   filters.disaster_category === category
-                                    ? "default"
-                                    : "outline"
-                                }
-                                className="cursor-pointer"
-                                onClick={() =>
-                                  handleFilterChange(
-                                    "disaster_category",
-                                    filters.disaster_category === category
-                                      ? ""
-                                      : category
-                                  )
-                                }
-                              >
-                                {category.charAt(0).toUpperCase() +
-                                  category.slice(1)}
-                              </Badge>
-                            )
-                          )}
+                                    ? ""
+                                    : category,
+                                )
+                              }
+                            >
+                              {category.charAt(0).toUpperCase() +
+                                category.slice(1)}
+                            </Badge>
+                          ))}
                         </div>
 
                         <div className="flex space-x-2">
@@ -361,7 +406,7 @@ export default function DisasterFeed() {
                             onValueChange={(value) =>
                               handleFilterChange(
                                 "district",
-                                value === "all" ? "" : value
+                                value === "all" ? "" : value,
                               )
                             }
                           >
@@ -379,7 +424,11 @@ export default function DisasterFeed() {
                           </Select>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" onClick={clearFilters}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearFilters}
+                      >
                         Clear Filters
                       </Button>
                     </div>

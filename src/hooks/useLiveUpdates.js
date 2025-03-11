@@ -1,38 +1,33 @@
 import { useState, useEffect } from "react";
-import { reportApi } from '@/lib/reportApi';
+import { reportApi } from "@/lib/reportApi";
+import { warningApi } from "@/lib/warningApi";
 
 export const useLiveUpdates = () => {
   const [updates, setUpdates] = useState([]);
   const [activeWarnings, setActiveWarnings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchUpdates = async () => {
     try {
-      const [updatesResponse, feedStatsResponse] = await Promise.all([
-        reportApi.public.getFeedUpdates(30), // Fixed: use public.getFeedUpdates
-        reportApi.public.getFeedStats()      // Fixed: use public.getFeedStats
+      setLoading(true);
+      const [warningsResponse, updatesResponse] = await Promise.all([
+        warningApi.public.getActiveWarnings(),
+        reportApi.public.getFeedUpdates(30),
       ]);
 
       if (updatesResponse.success) {
         setUpdates(updatesResponse.data.updates);
       }
 
-      if (feedStatsResponse.success) {
-        const activeWarnings = feedStatsResponse.data.warningStats
-          .filter(w => w.status === 'active')
-          .map(warning => ({
-            id: warning._id,
-            title: warning.title,
-            disaster_category: warning.disaster_category,
-            severity: warning.severity,
-            affected_locations: warning.affected_locations,
-            status: warning.status,
-            created_at: warning.created_at
-          }));
-
-        setActiveWarnings(activeWarnings);
+      if (warningsResponse.success) {
+        setActiveWarnings(warningsResponse.data.warnings);
       }
     } catch (error) {
       console.error("Error fetching updates:", error);
+      setError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,5 +37,5 @@ export const useLiveUpdates = () => {
     return () => clearInterval(interval);
   }, []);
 
-  return { updates, activeWarnings };
+  return { updates, activeWarnings, loading, error };
 };
