@@ -71,19 +71,33 @@ const AdminDashboard = () => {
         verification_status: "pending",
         limit: 5,
       });
-
-      const formattedReports = response.data.reports.map((report) => ({
-        title: report.title,
-        id: report.id || report._id,
-        type: report.disaster_category,
-        location: `${report.location.address.district}, ${report.location.address.city}`,
-        timestamp: new Date(report.date_time).toLocaleString(),
-        urgency: report.verification?.severity || "Medium",
-      }));
-
+  
+      if (!response.data?.reports) {
+        console.error("Unexpected response format:", response);
+        return;
+      }
+  
+      // First filter the pending reports, then format them
+      const formattedReports = response.data.reports
+        .filter((report) => report.verification_status === "pending")
+        .map((report) => ({
+          title: report.title,
+          id: report.id || report._id,
+          type: report.disaster_category,
+          location: `${report.location.address.district}, ${report.location.address.city}`,
+          timestamp: new Date(report.date_time).toLocaleString(),
+          urgency: report.verification?.severity || "Medium",
+          verification_status: report.verification_status,
+        }));
+  
       setPendingReports(formattedReports);
     } catch (error) {
       console.error("Error fetching pending reports:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch pending reports",
+        variant: "destructive",
+      });
     }
   };
 
@@ -160,6 +174,11 @@ const AdminDashboard = () => {
 
   const handleReportAction = async (reportId, action) => {
     try {
+      // Optimistically remove the report from UI
+      setPendingReports((current) =>
+        current.filter((report) => report.id !== reportId),
+      );
+
       if (action === "verify") {
         await reportApi.protected.verifyReport(reportId, {
           severity: "medium",
@@ -171,19 +190,34 @@ const AdminDashboard = () => {
         });
       }
 
-      await fetchPendingReports();
-      await fetchVerificationStats();
+      // Refresh all data after successful action
+      await Promise.all([
+        fetchPendingReports(),
+        fetchVerificationStats(),
+        fetchReportStats(),
+        fetchReportAnalytics(),
+      ]);
 
       toast({
         title: "Success",
         description: `Report successfully ${action === "verify" ? "verified" : "dismissed"}.`,
       });
     } catch (error) {
+      // If error occurs, revert the UI and show error
       console.error(`Error ${action}ing report:`, error);
+
+      // Refresh data to ensure UI is in sync
+      await Promise.all([
+        fetchPendingReports(),
+        fetchVerificationStats(),
+        fetchReportStats(),
+        fetchReportAnalytics(),
+      ]);
+
       toast({
         title: "Error",
         description:
-          error.response?.data?.message || `Failed to ${action} report.`,
+          error.response?.data?.error || `Failed to ${action} report.`,
         variant: "destructive",
       });
     }

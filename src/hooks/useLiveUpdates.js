@@ -8,8 +8,8 @@ export const useLiveUpdates = () => {
   const fetchUpdates = async () => {
     try {
       const [updatesResponse, feedStatsResponse] = await Promise.all([
-        reportApi.getFeedUpdates(30), // Get last 30 minutes of updates
-        reportApi.getFeedStats()
+        reportApi.public.getFeedUpdates(30), // Fixed: use public.getFeedUpdates
+        reportApi.public.getFeedStats()      // Fixed: use public.getFeedStats
       ]);
 
       if (updatesResponse.success) {
@@ -17,7 +17,6 @@ export const useLiveUpdates = () => {
       }
 
       if (feedStatsResponse.success) {
-        // Handle active warnings from feed stats
         const activeWarnings = feedStatsResponse.data.warningStats
           .filter(w => w.status === 'active')
           .map(warning => ({
