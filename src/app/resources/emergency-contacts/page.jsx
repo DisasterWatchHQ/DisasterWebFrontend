@@ -3,17 +3,15 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Phone } from "lucide-react";
+// import apiClient from '@/lib/api';
 
 export default function EmergencyContactsPage() {
   const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
     const fetchContacts = async () => {
-      const response = await fetch(
-        "http://localhost:5000/api/resources/emergency-contacts",
-      );
-      const data = await response.json();
-      setContacts(data.resources);
+      const response = await apiClient.get('/resources/emergency-contacts');
+      setContacts(response.data.resources);
     };
     fetchContacts();
   }, []);

@@ -1,66 +1,72 @@
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useCallback } from "react";
+import { reportApi } from "@/lib/reportApi";
 
-export const useReports = () => {
+export const useReports = (requireAuth = false) => {
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
-    disaster_category: '',
-    verified_only: false
+    disaster_category: "",
+    status: "active",
+    district: "",
+    verification_status: "",
+    verified_only: false,
   });
 
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
-      
-      // Convert filters to query parameters
-      const queryParams = new URLSearchParams({
-        page: filters.page.toString(),
-        limit: filters.limit.toString(),
-        verified_only: filters.verified_only.toString()
-      });
-
-      // Only add disaster_category if it's not empty
-      if (filters.disaster_category) {
-        queryParams.append('disaster_category', filters.disaster_category);
-      }
-
-      const [reportsResponse, statsResponse] = await Promise.all([
-        axios.get(`http://localhost:5000/api/userReport/reports?${queryParams}`),
-        axios.get('http://localhost:5000/api/userReport/feedstats')
-      ]);
-
-      // Properly map the response data
-      const mappedReports = reportsResponse.data.data.reports.map(report => ({
-        id: report.id || report._id,
-        title: report.title,
-        description: report.description,
-        disaster_category: report.disaster_category,
-        location: report.location,
-        timestamp: report.date_time,
-        images: report.images || [],
-        verified: report.verification_status === "verified",
-        verification_status: report.verification_status,
-        severity: report.verification?.severity || 'low'
-      }));
-
-      setReports(mappedReports);
-      setStats(statsResponse.data.data);
       setError(null);
+
+      if (requireAuth) {
+        // Fetch data for authenticated users
+        const [
+          reportsResponse,
+          statsResponse,
+          verificationStatsResponse,
+          analyticsResponse,
+        ] = await Promise.all([
+          reportApi.protected.getVerifiedReports(filters),
+          reportApi.protected.getReportStats(),
+          reportApi.protected.getVerificationStats(),
+          reportApi.protected.getReportAnalytics(),
+        ]);
+
+        setReports(reportsResponse.data.reports);
+        setStats({
+          ...statsResponse,
+          verification: verificationStatsResponse,
+        });
+        setAnalytics(analyticsResponse);
+      } else {
+        // Modify the public API call to include verified_only
+        const [reportsResponse, feedStatsResponse] = await Promise.all([
+          reportApi.public.getFeedReports({
+            ...filters,
+            verification_status: filters.verified_only
+              ? "verified"
+              : filters.verification_status,
+          }),
+          reportApi.public.getFeedStats(),
+        ]);
+
+        setReports(reportsResponse.data.reports);
+        setStats({ feed: feedStatsResponse });
+      }
     } catch (err) {
-      console.error('Error fetching reports:', err);
+      console.error("Error fetching reports:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, requireAuth]);
 
   const updateFilters = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   useEffect(() => {
@@ -70,10 +76,16 @@ export const useReports = () => {
   return {
     reports,
     stats,
+    analytics,
     loading,
     error,
     filters,
     updateFilters,
-    refreshReports: fetchReports
+    refreshReports: fetchReports,
+    pagination: {
+      currentPage: filters.page,
+      totalPages: Math.ceil((reports?.length || 0) / filters.limit),
+      totalItems: reports?.length || 0,
+    },
   };
 };

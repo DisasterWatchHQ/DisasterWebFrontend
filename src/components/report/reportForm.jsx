@@ -73,7 +73,7 @@ export default function ReportForm() {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch("/api/reports", {
+      const response = await fetch("/reports", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

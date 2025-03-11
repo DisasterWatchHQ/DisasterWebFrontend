@@ -54,14 +54,11 @@ export function SignUpForm({ onSignUpSuccess }) {
         workId,
         associated_department: associatedDepartment,
       };
-  
-      console.log("Payload being sent:", userData); // Debugging
       const response = await createUser(userData);
   
       toast.success("Registration successful! You can now sign in.");
       onSignUpSuccess && onSignUpSuccess();
   
-      // Clear form
       setName("");
       setEmail("");
       setPassword("");
@@ -69,7 +66,6 @@ export function SignUpForm({ onSignUpSuccess }) {
       setWorkId("");
       setAssociatedDepartment("");
     } catch (err) {
-      console.error("Error details:", err);
       toast.error(
         err.response?.data?.message ||
         err.message ||

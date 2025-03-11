@@ -19,7 +19,6 @@ export const UserProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication status on mount
     checkAuth();
   }, []);
 
@@ -33,7 +32,6 @@ export const UserProvider = ({ children }) => {
         return;
       }
 
-      // Check token expiration
       const userData = JSON.parse(storedUser);
       if (isTokenExpired(token)) {
         handleLogout();
@@ -72,17 +70,14 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
 
-    // Clear any other auth-related storage
     sessionStorage.clear();
 
-    // Optional: Clear cookies if you're using them
     document.cookie.split(";").forEach((cookie) => {
       document.cookie = cookie
         .replace(/^ +/, "")
         .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
     });
 
-    // Redirect to login page
     router.push("/auth");
   };
 
@@ -92,9 +87,8 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
-  // Don't render children until initial auth check is complete
   if (isLoading) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (

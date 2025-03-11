@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { resourceApi } from "@/lib/resourceApi"; // Import the resource API client
 
 export default function GuidesPage() {
   const { toast } = useToast();
@@ -51,6 +52,7 @@ export default function GuidesPage() {
   const [editingGuide, setEditingGuide] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
   const [token, setToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -79,11 +81,10 @@ export default function GuidesPage() {
   }, [selectedType]);
 
   const fetchGuides = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/resources/guides${selectedType !== "all" ? `?type=${selectedType}` : ""}`,
-      );
-      const data = await response.json();
+      const params = selectedType !== "all" ? { type: selectedType } : {};
+      const data = await resourceApi.public.getGuides(params);
       setGuides(data.resources);
     } catch (error) {
       toast({
@@ -91,6 +92,8 @@ export default function GuidesPage() {
         description: "Failed to fetch guides",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,37 +109,33 @@ export default function GuidesPage() {
       return;
     }
 
+    setIsLoading(true);
     try {
-      const url = editingGuide
-        ? `http://localhost:5000/api/resources/${editingGuide.id}`
-        : "http://localhost:5000/api/resources/";
-
-      const method = editingGuide ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
+      if (editingGuide) {
+        await resourceApi.protected.updateResource(editingGuide.id, formData);
         toast({
           title: "Success",
-          description: `Guide ${editingGuide ? "updated" : "created"} successfully`,
+          description: "Guide updated successfully",
         });
-        setIsDialogOpen(false);
-        resetForm();
-        fetchGuides();
+      } else {
+        await resourceApi.protected.createResource(formData);
+        toast({
+          title: "Success",
+          description: "Guide created successfully",
+        });
       }
+      
+      setIsDialogOpen(false);
+      resetForm();
+      fetchGuides();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -150,30 +149,22 @@ export default function GuidesPage() {
       return;
     }
 
+    setIsLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/resources/guides/${guideId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Guide deleted successfully",
-        });
-        fetchGuides();
-      }
+      await resourceApi.protected.deleteResource(guideId);
+      toast({
+        title: "Success",
+        description: "Guide deleted successfully",
+      });
+      fetchGuides();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -237,16 +228,46 @@ export default function GuidesPage() {
     setEditingGuide(null);
   };
 
-  const handleEdit = (guide) => {
-    setEditingGuide(guide);
-    setFormData({
-      ...guide,
-      metadata: {
-        ...guide.metadata,
-        lastUpdated: new Date().toISOString(),
-      },
-    });
-    setIsDialogOpen(true);
+  const handleEdit = async (guide) => {
+    setIsLoading(true);
+    try {
+      // Get the most up-to-date guide data
+      const updatedGuide = await resourceApi.public.getResourceById(guide.id || guide._id);
+      setEditingGuide(updatedGuide.resource);
+      setFormData({
+        ...updatedGuide.resource,
+        metadata: {
+          ...updatedGuide.resource.metadata,
+          lastUpdated: new Date().toISOString(),
+        },
+      });
+      setIsDialogOpen(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load guide details",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleViewGuide = async (guide) => {
+    setIsLoading(true);
+    try {
+      // Get the most up-to-date guide data
+      const updatedGuide = await resourceApi.public.getResourceById(guide.id || guide._id);
+      setSelectedGuide(updatedGuide.resource);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load guide details",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredGuides = guides.filter(
@@ -309,7 +330,7 @@ export default function GuidesPage() {
             }}
           >
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
+              <Button className="flex items-center gap-2" disabled={isLoading}>
                 <Plus className="h-4 w-4" />
                 Add New Guide
               </Button>
@@ -398,11 +419,12 @@ export default function GuidesPage() {
                       setIsDialogOpen(false);
                       resetForm();
                     }}
+                    disabled={isLoading}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    {editingGuide ? "Update Guide" : "Create Guide"}
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? "Processing..." : (editingGuide ? "Update Guide" : "Create Guide")}
                   </Button>
                 </div>
               </form>
@@ -431,76 +453,92 @@ export default function GuidesPage() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredGuides.map((guide) => (
-          <Card
-            key={guide.id}
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => setSelectedGuide(guide)}
-          >
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle>{guide.name}</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEdit(guide);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+      {isLoading && guides.length === 0 ? (
+        <div className="flex justify-center py-12">
+          <p>Loading guides...</p>
+        </div>
+      ) : filteredGuides.length === 0 ? (
+        <div className="flex justify-center py-12">
+          <p>No guides found. Try changing your search or filter.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGuides.map((guide) => (
+            <Card
+              key={guide.id || guide._id}
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleViewGuide(guide)}
+            >
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <CardTitle>{guide.name}</CardTitle>
+                  {token && (
+                    <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(guide);
+                        }}
+                        disabled={isLoading}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Guide</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this guide? This
-                          action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(guide._id)}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={isLoading}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Guide</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this guide? This
+                              action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(guide.id || guide._id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex gap-2">
-                {guide.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">{guide.description}</p>
-            </CardContent>
-            <CardFooter className="text-sm text-muted-foreground">
-              Last updated:{" "}
-              {new Date(guide.metadata.lastUpdated).toLocaleDateString()}
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+                <div className="flex flex-wrap gap-2">
+                  {guide.tags && guide.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">{guide.description}</p>
+              </CardContent>
+              <CardFooter className="text-sm text-muted-foreground">
+                Last updated:{" "}
+                {guide.metadata && guide.metadata.lastUpdated ? 
+                  new Date(guide.metadata.lastUpdated).toLocaleDateString() : 
+                  "Unknown"}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
       <GuideDetailDialog
         guide={selectedGuide}
         open={!!selectedGuide}

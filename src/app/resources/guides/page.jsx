@@ -24,11 +24,13 @@ export default function GuidesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedGuide, setSelectedGuide] = useState(null);
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   useEffect(() => {
     const fetchGuides = async () => {
       const response = await fetch(
-        `http://localhost:5000/api/resources/guides${selectedType !== 'all' ? `?type=${selectedType}` : ''}`
+        `${API_BASE_URL}/resources/guides${selectedType !== 'all' ? `?type=${selectedType}` : ''}`
       );
       const data = await response.json();
       setGuides(data.resources);

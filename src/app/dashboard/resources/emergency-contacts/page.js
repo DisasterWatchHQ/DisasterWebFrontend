@@ -32,12 +32,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { resourceApi } from "@/lib/resourceApi"; // Import the resource API client
 
 export default function EmergencyContactsPage() {
   const { toast } = useToast();
   const [contacts, setContacts] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [token, setToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     category: "emergency_contact",
@@ -56,17 +57,13 @@ export default function EmergencyContactsPage() {
   const [editingContact, setEditingContact] = useState(null);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
     fetchContacts();
   }, []);
 
   const fetchContacts = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/resources/emergency-contacts",
-      );
-      const data = await response.json();
+      setIsLoading(true);
+      const data = await resourceApi.public.getEmergencyContacts();
       setContacts(data.resources);
     } catch (error) {
       toast({
@@ -74,6 +71,8 @@ export default function EmergencyContactsPage() {
         description: "Failed to fetch emergency contacts",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,15 +83,6 @@ export default function EmergencyContactsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!token) {
-      toast({
-        title: "Error",
-        description: "Please login to create or edit guides",
-        variant: "destructive",
-      });
-      return;
-    }
 
     if (!validatePhoneNumber(formData.contact.phone)) {
       toast({
@@ -105,73 +95,53 @@ export default function EmergencyContactsPage() {
     }
 
     try {
-      const url = editingContact
-        ? `http://localhost:5000/api/resources/${editingContact.id}`
-        : "http://localhost:5000/api/resources";
-
-      const method = editingContact ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
+      setIsLoading(true);
+      
+      if (editingContact) {
+        await resourceApi.protected.updateResource(editingContact._id, formData);
         toast({
           title: "Success",
-          description: `Emergency contact ${editingContact ? "updated" : "created"} successfully`,
+          description: "Emergency contact updated successfully",
         });
-        setIsDialogOpen(false);
-        resetForm();
-        fetchContacts();
+      } else {
+        await resourceApi.protected.createResource(formData);
+        toast({
+          title: "Success",
+          description: "Emergency contact created successfully",
+        });
       }
+      
+      setIsDialogOpen(false);
+      resetForm();
+      fetchContacts();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.error || error.message || "An error occurred",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async (contactId) => {
-    if (!token) {
-      toast({
-        title: "Error",
-        description: "Please login to delete contacts",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/resources/${contactId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Contact deleted successfully",
-        });
-        fetchContacts();
-      }
+      setIsLoading(true);
+      await resourceApi.protected.deleteResource(contactId);
+      toast({
+        title: "Success",
+        description: "Contact deleted successfully",
+      });
+      fetchContacts();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.error || error.message || "An error occurred",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -299,7 +269,7 @@ export default function EmergencyContactsPage() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    tags: e.target.value.split(",").map((tag) => tag.trim()),
+                    tags: e.target.value.split(",").map((tag) => tag.trim()).filter(tag => tag),
                   })
                 }
               />
@@ -312,95 +282,110 @@ export default function EmergencyContactsPage() {
                     setIsDialogOpen(false);
                     resetForm();
                   }}
+                  disabled={isLoading}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Add Contact</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Processing..." : editingContact ? "Update Contact" : "Add Contact"}
+                </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {contacts.map((contact) => (
-          <Card key={contact.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
-                  {contact.name}
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(contact)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4 text-red-500" />
+      {isLoading && !contacts.length ? (
+        <div className="flex justify-center py-10">
+          <p>Loading emergency contacts...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {contacts.length === 0 ? (
+            <div className="col-span-full text-center py-10">
+              <p className="text-muted-foreground">No emergency contacts found.</p>
+            </div>
+          ) : (
+            contacts.map((contact) => (
+              <Card key={contact._id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="flex items-center gap-2">
+                      <Phone className="h-5 w-5" />
+                      {contact.name}
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(contact)}
+                      >
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Contact</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this contact? This
-                          action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleDelete(contact.id)}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-              <Badge
-                variant={
-                  contact.emergency_level === "high"
-                    ? "destructive"
-                    : "secondary"
-                }
-              >
-                {contact.emergency_level} priority
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="font-medium">
-                  <p>Phone: {contact.contact.phone}</p>
-                  {contact.contact.email && (
-                    <p>Email: {contact.contact.email}</p>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Service Hours: {contact.metadata.serviceHours}
-                </p>
-                {contact.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {contact.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline">
-                        {tag}
-                      </Badge>
-                    ))}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Contact</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this contact? This
+                              action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(contact._id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  <Badge
+                    variant={
+                      contact.emergency_level === "high"
+                        ? "destructive"
+                        : "secondary"
+                    }
+                  >
+                    {contact.emergency_level} priority
+                  </Badge>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="font-medium">
+                      <p>Phone: {contact.contact.phone}</p>
+                      {contact.contact.email && (
+                        <p>Email: {contact.contact.email}</p>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Service Hours: {contact.metadata?.serviceHours || "N/A"}
+                    </p>
+                    {contact.tags && contact.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {contact.tags.map((tag, index) => (
+                          <Badge key={index} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

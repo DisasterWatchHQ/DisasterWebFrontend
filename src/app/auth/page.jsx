@@ -29,7 +29,6 @@ export default function AuthPage() {
     <>
       <Toaster position="top-center" expand={false} richColors />
 
-      {/* Password Reset Dialog */}
       <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -40,12 +39,14 @@ export default function AuthPage() {
       </Dialog>
 
       <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-        {/* Left Side - Branding Section */}
-        <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex" style={{
+        <div
+          className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex"
+          style={{
             backgroundImage: "url('/bg1.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}>
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
           <div className="absolute inset-0 bg-zinc-900 opacity-80" />
           <div className="relative z-20 flex items-center text-lg font-medium">
             <Link
@@ -91,7 +92,6 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Mobile Back Button */}
         <Link
           href="/"
           className="absolute left-4 top-4 text-gray-700 hover:text-gray-900 transition-colors lg:hidden"
@@ -100,7 +100,6 @@ export default function AuthPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
 
-        {/* Right Side - Authentication Forms */}
         <div className="lg:p-8 w-full">
           <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
             <Card className="p-6 shadow-lg">
@@ -134,7 +133,6 @@ export default function AuthPage() {
               </Tabs>
             </Card>
 
-            {/* Additional Links */}
             <div className="text-center text-sm text-muted-foreground">
               <button
                 onClick={() => setIsResetDialogOpen(true)}

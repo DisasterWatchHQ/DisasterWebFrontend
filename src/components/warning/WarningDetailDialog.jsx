@@ -10,16 +10,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export function WarningDetailDialog({ warning, open, onOpenChange }) {
   if (!warning) return null;
 
-  console.log("Warning Data:", warning); // Keep this for debugging
-
   const formatLocation = (location) => {
     try {
       if (!location?.address) return "Location details not available";
       const { city, district, province, details } = location.address;
-      let formatted =
-        `${district || ""}, ${city || ""}, ${province || ""}`.trim();
+      let formatted = [district, city, province].filter(Boolean).join(", ");
       if (details) formatted += ` - ${details}`;
-      return formatted;
+      return formatted || "Location details not available";
     } catch (error) {
       console.error("Error formatting location:", error);
       return "Location format error";

@@ -16,16 +16,9 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
-  User,
-  Mail,
   Building,
   MapPin,
-  Phone,
   Calendar,
-  Bell,
-  Shield,
-  Language,
-  LogOut,
   Upload,
   Trash2,
 } from "lucide-react";
@@ -47,18 +40,66 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// import { useUser } from "../../providers/UserContext";
-// import { getUserProfile, updateUser, deleteUser } from "@/utils/apiUser";
-// import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ChangePassword } from "@/components/common/ChangePassword";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+const getUserProfile = async (userId) => {
+  try {
+    const response = await fetch(`/api/users?userId=${userId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "Failed to fetch user profile");
+  }
+};
+
+const updateUser = async (userId, userData) => {
+  try {
+    const response = await fetch("/api/users", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+      body: JSON.stringify({ userId, ...userData }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "Failed to update user");
+  }
+};
+
+const deleteUser = async (userId) => {
+  try {
+    const response = await fetch(`/api/users?userId=${userId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "Failed to delete user");
+  }
+};
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState(null);
-  const [isChangePassword,setIsChangePasswordOpen] = useState(false);
+  const [isChangePassword, setIsChangePasswordOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -87,7 +128,6 @@ export default function Profile() {
         const userData = await getUserProfile(userId);
         setUser({
           ...userData.user,
-          // Add any missing fields that your frontend expects
           organization: userData.user.associated_department || "Not specified",
           joinDate: userData.user.createdAt
             ? new Date(userData.user.createdAt).toLocaleDateString()
@@ -100,7 +140,6 @@ export default function Profile() {
           },
         });
       } catch (error) {
-        setError(error.message);
         toast({
           title: "Error",
           description: error.message,
@@ -457,15 +496,18 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <Button  
+                <Button
                   variant="outline"
                   onClick={() => setIsChangePasswordOpen(true)}
-                  className="w-full">
-                    Change Password
-                  </Button>
-                  {isChangePassword && (
-                    <ChangePassword onClose={() => setIsChangePasswordOpen(false)} />
-                  )}
+                  className="w-full"
+                >
+                  Change Password
+                </Button>
+                <ChangePassword
+                  open={isChangePassword}
+                  onClose={() => setIsChangePasswordOpen(false)}
+                />
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
