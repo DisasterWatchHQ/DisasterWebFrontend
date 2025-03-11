@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { resourceApi } from "./api"; // Import resourceApi
 
 export default function FacilitiesPage() {
   const { toast } = useToast();
@@ -47,8 +48,6 @@ export default function FacilitiesPage() {
     city: "",
     availability_status: "all",
   });
-  const API_BASE_URL =
-    process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -73,7 +72,6 @@ export default function FacilitiesPage() {
     metadata: {
       capacity: 0,
     },
-
     capacity: 0,
     operating_hours: {
       monday: { open: "09:00", close: "17:00", is24Hours: false },
@@ -99,17 +97,16 @@ export default function FacilitiesPage() {
 
   const fetchFacilities = async () => {
     try {
-      const queryParams = new URLSearchParams();
-      if (filters.type !== "all") queryParams.append("type", filters.type);
-      if (filters.city) queryParams.append("city", filters.city);
+      // Create params object for API call
+      const params = {};
+      if (filters.type !== "all") params.type = filters.type;
+      if (filters.city) params.city = filters.city;
       if (filters.availability_status !== "all") {
-        queryParams.append("availability_status", filters.availability_status);
+        params.availability_status = filters.availability_status;
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`,
-      );
-      const data = await response.json();
+      // Use resourceApi instead of direct fetch
+      const data = await resourceApi.public.getFacilities(params);
       setFacilities(data.resources);
     } catch (error) {
       toast({
@@ -165,34 +162,29 @@ export default function FacilitiesPage() {
         },
       };
 
-      const url = editingFacility
-        ? `${API_BASE_URL}/resources/${editingFacility.id}`
-        : `${API_BASE_URL}/resources/`;
-
-      const method = editingFacility ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (response.ok) {
+      if (editingFacility) {
+        // Update existing resource
+        await resourceApi.protected.updateResource(editingFacility.id, requestBody);
         toast({
           title: "Success",
-          description: `Facility ${editingFacility ? "updated" : "created"} successfully`,
+          description: "Facility updated successfully",
         });
-        setIsDialogOpen(false);
-        resetForm();
-        fetchFacilities();
+      } else {
+        // Create new resource
+        await resourceApi.protected.createResource(requestBody);
+        toast({
+          title: "Success",
+          description: "Facility created successfully",
+        });
       }
+      
+      setIsDialogOpen(false);
+      resetForm();
+      fetchFacilities();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
     }
@@ -200,25 +192,18 @@ export default function FacilitiesPage() {
 
   const handleDelete = async (facilityId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/resources/${facilityId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      // Use resourceApi for deletion
+      await resourceApi.protected.deleteResource(facilityId);
+      
+      toast({
+        title: "Success",
+        description: "Facility deleted successfully",
       });
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Facility deleted successfully",
-        });
-        fetchFacilities();
-      }
+      fetchFacilities();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to delete facility",
         variant: "destructive",
       });
     }

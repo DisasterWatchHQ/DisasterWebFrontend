@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Phone } from "lucide-react";
-import apiClient from '@/lib/api';
+// import apiClient from '@/lib/api';
 
 export default function EmergencyContactsPage() {
   const [contacts, setContacts] = useState([]);
