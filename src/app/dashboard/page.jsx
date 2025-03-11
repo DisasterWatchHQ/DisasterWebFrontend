@@ -26,7 +26,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import axios from "axios";
 import { WarningActions } from "@/components/warning/WarningActions";
 import CreateWarningDialog from "@/components/report/CreateWarningDialog";
 import { warningApi } from "@/lib/warningApi";
@@ -71,12 +70,12 @@ const AdminDashboard = () => {
         verification_status: "pending",
         limit: 5,
       });
-  
+
       if (!response.data?.reports) {
         console.error("Unexpected response format:", response);
         return;
       }
-  
+
       // First filter the pending reports, then format them
       const formattedReports = response.data.reports
         .filter((report) => report.verification_status === "pending")
@@ -89,7 +88,7 @@ const AdminDashboard = () => {
           urgency: report.verification?.severity || "Medium",
           verification_status: report.verification_status,
         }));
-  
+
       setPendingReports(formattedReports);
     } catch (error) {
       console.error("Error fetching pending reports:", error);
@@ -332,10 +331,25 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      <CardTitle>Create Warnings!</CardTitle>
+      <div className="flex justify-between items-center">
+        <CardTitle>Warnings Management</CardTitle>
+        <Button
+          onClick={() => setIsWarningDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Create Warning
+        </Button>
+      </div>
+
       <CreateWarningDialog
         open={isWarningDialogOpen}
-        onOpenChange={setIsWarningDialogOpen}
+        onOpenChange={(open) => {
+          setIsWarningDialogOpen(open);
+          if (!open) {
+            fetchActiveWarnings();
+          }
+        }}
       />
       <Card>
         <CardHeader>
@@ -343,33 +357,40 @@ const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {activeWarnings.map((warning) => (
-              <div
-                key={warning._id}
-                className="flex items-center justify-between p-4 border rounded"
-              >
-                <div className="space-y-1">
-                  <div className="font-medium">{warning.title}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {warning.disaster_category} - Severity: {warning.severity}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Created: {new Date(warning.created_at).toLocaleString()}
-                  </div>
-                  {warning.updates.length > 0 && (
+            {Array.isArray(activeWarnings) && activeWarnings.length > 0 ? (
+              activeWarnings.map((warning) => (
+                <div
+                  key={warning.id || warning._id}
+                  className="flex items-center justify-between p-4 border rounded"
+                >
+                  <div className="space-y-1">
+                    <div className="font-medium">{warning.title}</div>
                     <div className="text-sm text-muted-foreground">
-                      Last update:{" "}
-                      {warning.updates[warning.updates.length - 1].update_text}
+                      {warning.disaster_category} - Severity: {warning.severity}
                     </div>
-                  )}
+                    <div className="text-sm text-muted-foreground">
+                      Created:{" "}
+                      {new Date(
+                        warning.createdAt || warning.created_at,
+                      ).toLocaleString()}
+                    </div>
+                    {warning.updates?.length > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        Last update:{" "}
+                        {
+                          warning.updates[warning.updates.length - 1]
+                            .update_text
+                        }
+                      </div>
+                    )}
+                  </div>
+                  <WarningActions
+                    warning={warning}
+                    onUpdate={() => fetchActiveWarnings()}
+                  />
                 </div>
-                <WarningActions
-                  warning={warning}
-                  onUpdate={() => fetchActiveWarnings()}
-                />
-              </div>
-            ))}
-            {activeWarnings.length === 0 && (
+              ))
+            ) : (
               <div className="text-center py-4 text-muted-foreground">
                 No active warnings
               </div>

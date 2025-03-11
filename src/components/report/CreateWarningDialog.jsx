@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { warningApi } from "@/lib/warningApi";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,12 +11,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -48,36 +46,29 @@ const formSchema = z.object({
   affected_locations: z
     .array(
       z.object({
-        latitude: z.number().optional(),
-        longitude: z.number().optional(),
+        coordinates: z.object({
+          latitude: z.number().nullable(),
+          longitude: z.number().nullable(),
+        }),
         address: z.object({
           city: z.string().min(1, "City is required"),
           district: z.string().min(1, "District is required"),
           province: z.string().min(1, "Province is required"),
-          details: z.string().optional(),
+          details: z.string().optional().nullable(),
         }),
       }),
     )
     .min(1, "At least one location must be specified"),
-  expected_duration: z.object({
-    start_time: z.string().optional(),
-    end_time: z.string().optional(),
-  }),
   images: z.array(z.string().url()).optional(),
 });
 
-const CreateWarningDialog = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const CreateWarningDialog = ({ open, onOpenChange }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAddressEdit, setShowAddressEdit] = useState(false);
   const { toast } = useToast();
-  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    setToken(storedToken);
     const userInfo = JSON.parse(localStorage.getItem("user"));
     setUser(userInfo);
   }, []);
@@ -91,8 +82,10 @@ const CreateWarningDialog = () => {
       severity: undefined,
       affected_locations: [
         {
-          latitude: null,
-          longitude: null,
+          coordinates: {
+            latitude: null,
+            longitude: null,
+          },
           address: {
             city: "",
             district: "",
@@ -101,17 +94,44 @@ const CreateWarningDialog = () => {
           },
         },
       ],
-      expected_duration: {
-        start_time: new Date().toISOString(),
-        end_time: "",
-      },
       images: [],
     },
   });
 
+  const handleLocationSelect = (location) => {
+    if (!location) return;
+
+    // Set coordinates
+    form.setValue("affected_locations.0.coordinates", {
+      latitude: location.latitude || null,
+      longitude: location.longitude || null,
+    });
+
+    // Set address with fallbacks
+    const address = location.address || {};
+    form.setValue("affected_locations.0.address", {
+      city: address.city || "Unknown",
+      district: address.district || "Unknown",
+      province: address.province || "Unknown",
+      details: address.details || "",
+    });
+
+    // Show address edit form if some information is missing
+    if (!address || !address.city || !address.district || !address.province) {
+      setShowAddressEdit(true);
+      toast({
+        title: "Address Review Needed",
+        description:
+          "Please review and correct the location details if necessary.",
+        variant: "warning",
+      });
+    }
+  };
+
   async function onSubmit(data) {
     try {
       setIsSubmitting(true);
+
       if (!user || !user.id) {
         toast({
           title: "Error",
@@ -124,15 +144,12 @@ const CreateWarningDialog = () => {
       const formattedData = {
         ...data,
         created_by: user.id,
-        expected_duration: {
-          start_time: new Date(data.expected_duration.start_time),
-          end_time: data.expected_duration.end_time
-            ? new Date(data.expected_duration.end_time)
-            : undefined,
-        },
+        status: "active",
         affected_locations: data.affected_locations.map((location) => ({
-          latitude: location.latitude || null,
-          longitude: location.longitude || null,
+          coordinates: {
+            latitude: location.coordinates.latitude,
+            longitude: location.coordinates.longitude,
+          },
           address: {
             city: location.address.city,
             district: location.address.district,
@@ -150,7 +167,7 @@ const CreateWarningDialog = () => {
       });
 
       form.reset();
-      setIsOpen(false);
+      onOpenChange(false);
     } catch (error) {
       toast({
         title: "Error",
@@ -162,11 +179,10 @@ const CreateWarningDialog = () => {
     }
   }
 
+  const selectedLocation = form.watch("affected_locations.0");
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Create Warning</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Warning</DialogTitle>
@@ -186,9 +202,6 @@ const CreateWarningDialog = () => {
                   <FormControl>
                     <Input placeholder="Warning title" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Brief, clear title for the warning
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -249,15 +262,6 @@ const CreateWarningDialog = () => {
                   </FormItem>
                 )}
               />
-              <MapPicker
-                onLocationSelect={(location) => {
-                  form.setValue("affected_locations.0", {
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    address: location.address,
-                  });
-                }}
-              />
             </div>
 
             <FormField
@@ -273,21 +277,44 @@ const CreateWarningDialog = () => {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
-                    Provide comprehensive information about the warning
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             <div className="space-y-4">
-              <h3 className="text-lg font-medium">Affected Location</h3>
-              {form.watch("affected_locations").map((_, index) => (
-                <div key={index} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">Select Location</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAddressEdit(!showAddressEdit)}
+                >
+                  {showAddressEdit
+                    ? "Hide Address Edit"
+                    : "Edit Address Manually"}
+                </Button>
+              </div>
+
+              <MapPicker onLocationSelect={handleLocationSelect} />
+
+              {selectedLocation?.coordinates?.latitude && (
+                <div className="flex items-center gap-2 p-4 border rounded-md bg-yellow-50 text-yellow-800">
+                  <AlertTriangle className="h-4 w-4" />
+                  <p className="text-sm">
+                    Selected coordinates:{" "}
+                    {selectedLocation.coordinates.latitude.toFixed(6)},{" "}
+                    {selectedLocation.coordinates.longitude.toFixed(6)}
+                  </p>
+                </div>
+              )}
+
+              {showAddressEdit && (
+                <div className="space-y-4 border rounded-lg p-4">
+                  <h4 className="font-medium">Edit Address Details</h4>
                   <FormField
                     control={form.control}
-                    name={`affected_locations.${index}.address.city`}
+                    name="affected_locations.0.address.city"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>City</FormLabel>
@@ -301,7 +328,7 @@ const CreateWarningDialog = () => {
 
                   <FormField
                     control={form.control}
-                    name={`affected_locations.${index}.address.district`}
+                    name="affected_locations.0.address.district"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>District</FormLabel>
@@ -315,7 +342,7 @@ const CreateWarningDialog = () => {
 
                   <FormField
                     control={form.control}
-                    name={`affected_locations.${index}.address.province`}
+                    name="affected_locations.0.address.province"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Province</FormLabel>
@@ -329,10 +356,10 @@ const CreateWarningDialog = () => {
 
                   <FormField
                     control={form.control}
-                    name={`affected_locations.${index}.address.details`}
+                    name="affected_locations.0.address.details"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location Details</FormLabel>
+                        <FormLabel>Additional Details</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Additional location details"
@@ -345,31 +372,14 @@ const CreateWarningDialog = () => {
                     )}
                   />
                 </div>
-              ))}
-            </div>
-
-            <FormField
-              control={form.control}
-              name="expected_duration.end_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expected End Time</FormLabel>
-                  <FormControl>
-                    <Input type="datetime-local" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Estimated time when the situation might be resolved
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
               )}
-            />
+            </div>
 
             <div className="flex justify-end space-x-4 pt-4">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsOpen(false)}
+                onClick={() => onOpenChange(false)}
               >
                 Cancel
               </Button>
