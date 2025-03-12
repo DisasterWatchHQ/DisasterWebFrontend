@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -18,23 +19,38 @@ import {
 } from '@/components/ui/select';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { resourceApi } from '@/lib/resourceApi';
 
 export default function GuidesPage() {
   const [guides, setGuides] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedGuide, setSelectedGuide] = useState(null);
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchGuides = async () => {
-      const response = await fetch(
-        `${API_BASE_URL}/resources/guides${selectedType !== 'all' ? `?type=${selectedType}` : ''}`
-      );
-      const data = await response.json();
-      setGuides(data.resources);
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const params = selectedType !== 'all' ? { type: selectedType } : {};
+        const response = await resourceApi.public.getGuides(params);
+        
+        if (response.resources) {
+          setGuides(response.resources);
+        } else {
+          throw new Error('Failed to fetch guides data');
+        }
+      } catch (err) {
+        console.error('Error fetching guides:', err);
+        setError('Failed to load guides. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
     };
+    
     fetchGuides();
   }, [selectedType]);
 
@@ -47,7 +63,7 @@ export default function GuidesPage() {
           <DialogHeader>
             <DialogTitle>{guide.name}</DialogTitle>
             <div className="flex gap-2 mt-2">
-              {guide.tags.map((tag) => (
+              {guide.tags && guide.tags.map((tag) => (
                 <Badge key={tag} variant="secondary">
                   {tag}
                 </Badge>
@@ -103,31 +119,45 @@ export default function GuidesPage() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredGuides.map((guide) => (
-          <Card 
-            key={guide.id} 
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => setSelectedGuide(guide)}
-          >
-            <CardHeader>
-              <CardTitle>{guide.name}</CardTitle>
-              <div className="flex gap-2">
-                {guide.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground line-clamp-3">
-                {guide.description}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="flex justify-center items-center min-h-[400px] text-destructive">
+          {error}
+        </div>
+      ) : filteredGuides.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          No guides found matching your criteria.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredGuides.map((guide) => (
+            <Card 
+              key={guide.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedGuide(guide)}
+            >
+              <CardHeader>
+                <CardTitle>{guide.name}</CardTitle>
+                <div className="flex gap-2">
+                  {guide.tags && guide.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground line-clamp-3">
+                  {guide.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <GuideDetailDialog
         guide={selectedGuide}

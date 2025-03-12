@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { resourceApi } from "./api"; // Import resourceApi
+import { resourceApi } from "@/lib/resourceApi";
 
 export default function FacilitiesPage() {
   const { toast } = useToast();

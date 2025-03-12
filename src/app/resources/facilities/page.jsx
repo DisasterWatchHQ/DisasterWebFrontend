@@ -14,7 +14,7 @@ import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from '@/lib/api';
+import { resourceApi } from "@/lib/resourceApi";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -40,30 +40,28 @@ export default function FacilitiesPage() {
         setLoading(true);
         setError(null);
 
-        const queryParams = new URLSearchParams({
+        const params = {
           page: pagination.currentPage.toString(),
           limit: ITEMS_PER_PAGE.toString()
-        });
+        };
 
-        if (filters.type !== "all") queryParams.append("type", filters.type);
-        if (filters.city) queryParams.append("city", filters.city);
+        if (filters.type !== "all") params.type = filters.type;
+        if (filters.city) params.city = filters.city;
         if (filters.availability_status !== "all") {
-          queryParams.append("availability_status", filters.availability_status);
+          params.availability_status = filters.availability_status;
         }
 
-        const response = await apiClient.get(
-          `/resources/facilities?${queryParams}`
-        );
+        const response = await resourceApi.public.getFacilities(params);
 
-        if (response.data.success) {
-          setFacilities(response.data.resources);
+        if (response.success) {
+          setFacilities(response.resources);
           setPagination({
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-            totalItems: response.data.totalResults
+            currentPage: response.currentPage,
+            totalPages: response.totalPages,
+            totalItems: response.totalResults
           });
         } else {
-          throw new Error(response.data.message || "Failed to fetch facilities");
+          throw new Error(response.message || "Failed to fetch facilities");
         }
       } catch (error) {
         setError(error.message);
