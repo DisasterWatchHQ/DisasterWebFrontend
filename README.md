@@ -1,83 +1,151 @@
-```markdown
 # DisasterWebFrontend
 
-The web frontend of the DisasterWatch app.
+The web frontend of the DisasterWatch app - a comprehensive platform for real-time natural disaster monitoring and alerts.
 
 ## Description
 
-This repository contains the web frontend for the DisasterWatch app, a platform designed to provide real-time information and alerts about natural disasters.
+DisasterWatch is a modern web application built with Next.js that provides real-time information and alerts about natural disasters. The platform helps users stay informed about ongoing disasters, access emergency resources, and contribute to community safety.
 
 ## Features
 
-- Real-time disaster alerts
-- Interactive maps
-- User profiles and resource pages
-- Theming and customization options
+- 🌍 Real-time disaster alerts and monitoring
+- 🗺️ Interactive maps with disaster zone visualization
+- 👤 User profiles with customizable preferences
+- 📱 Responsive design for all devices
+- 🎨 Dark/Light theme support
+- 📚 Comprehensive resource guides
+- 🔔 Push notifications for critical alerts
+- 🌐 Multi-language support (planned)
+
+## Tech Stack
+
+- **Framework**: Next.js 15.1.3
+- **Language**: React 19 with TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI, shadcn/ui
+- **Maps**: Google Maps API (@react-google-maps/api)
+- **Forms**: React Hook Form with Zod validation
+- **State Management**: React Context
+- **Data Fetching**: Axios
+- **Charts**: Recharts
+- **Markdown**: react-markdown with remark-gfm
 
 ## Project Structure
 
-- `components/`: React components used throughout the app
-- `pages/`: Next.js pages
-- `public/`: Static assets
-- `styles/`: CSS and Tailwind CSS styles
-
-## Installation
-
-To install the dependencies, run the following command:
-
-```bash
-npm install
+```
+src/
+├── app/              # Next.js app router pages and layouts
+├── components/       # Reusable UI components
+├── api/             # API route handlers
+├── lib/             # Utility functions and constants
+├── hooks/           # Custom React hooks
+└── provider/        # Context providers
 ```
 
-## Scripts
+## Prerequisites
 
-- `dev`: Runs the app in development mode
-- `build`: Builds the app for production
-- `start`: Starts the production build of the app
-- `lint`: Lints the codebase
+Before you begin, ensure you have:
+- Node.js 18.x or higher
+- npm 9.x or higher
+- A Google Maps API key (for map functionality)
 
-You can run these scripts using:
+## Environment Setup
 
-```bash
-npm run <script>
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/DisasterWatchHQ/DisasterWebFrontend.git
+   cd DisasterWebFrontend
+   ```
 
-## Dependencies
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-The project uses several dependencies, including but not limited to:
+3. Create a `.env.local` file in the root directory:
+   ```
+   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
+   NEXT_PUBLIC_API_URL=your_backend_api_url
+   ```
 
-- `@googlemaps/react-wrapper`
-- `@hookform/resolvers`
-- `@radix-ui/react-*`
-- `next`
-- `react`
-- `tailwindcss`
-- `zod`
+## Available Scripts
 
-For a complete list, refer to the [package.json](https://github.com/DisasterWatchHQ/DisasterWebFrontend/blob/main/package.json) file.
+- `npm run dev` - Start development server with Turbopack
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## Development Guidelines
+
+### Code Style
+- Use TypeScript for type safety
+- Follow the [Airbnb React/JSX Style Guide](https://github.com/airbnb/javascript/tree/master/react)
+- Use functional components with hooks
+- Implement proper error handling and loading states
+
+### Component Structure
+- Place reusable components in `src/components`
+- Group related components in subdirectories
+- Create barrel exports (index.ts) for clean imports
+- Use proper TypeScript interfaces for props
+
+### State Management
+- Use React Context for global state
+- Implement custom hooks for complex state logic
+- Keep component state local when possible
+
+### Styling
+- Use Tailwind CSS utility classes
+- Follow mobile-first responsive design
+- Maintain consistent spacing and typography
+- Use CSS variables for theme values
+
+## API Integration
+
+The frontend communicates with the DisasterWatch API for:
+- Disaster data and alerts
+- User authentication
+- Resource management
+- Profile updates
+
+Refer to the API documentation for endpoint details.
 
 ## Contributing
 
-We welcome contributions from the community. To contribute:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-1. Fork the repository.
-2. Create a new branch with a descriptive name.
-3. Make your changes.
-4. Submit a pull request.
+### Pull Request Guidelines
+- Include a clear description of changes
+- Add relevant tests
+- Update documentation as needed
+- Ensure all checks pass
 
-For detailed contribution guidelines, refer to [CONTRIBUTING.md](CONTRIBUTING.md) (if available).
+## Deployment
 
-## Recent Changes
+The application is configured for deployment on Vercel:
+1. Connect your Vercel account to the repository
+2. Configure environment variables
+3. Deploy using the Vercel dashboard or CLI
 
-Here are some of the recent notable commits:
+## Support
 
-- [feat: updated the resource page with more functionality](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commit/a0f48a89f513e2565293252b4d2f7c6234b20d35)
-- [feat: updated the profile page with shadcn ui elements](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commit/e0524261931e6d70f184ade1c24fb65b5e567f43)
-- [feat: updated the guides page with shadcn ui elements](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commit/64c2023515afddb9faeda7ca060561775c67b76b)
-
-For more commits, visit the [commit history](https://github.com/DisasterWatchHQ/DisasterWebFrontend/commits/main).
+For support, please:
+1. Check the [Issues](https://github.com/DisasterWatchHQ/DisasterWebFrontend/issues) page
+2. Create a new issue if needed
+3. Join our Discord community (link coming soon)
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Radix UI](https://www.radix-ui.com/)
 ```
