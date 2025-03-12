@@ -1,7 +1,6 @@
 import { publicClient, protectedClient } from './api';
 
 export const warningApi = {
-  // Public Routes
   public: {
     getActiveWarnings: async () => {
       const response = await publicClient.get('/warnings/active');
@@ -24,7 +23,6 @@ export const warningApi = {
     }
   },
 
-  // Protected Routes
   protected: {
     createWarning: async (warningData) => {
       const response = await protectedClient.post('/warnings', warningData);
