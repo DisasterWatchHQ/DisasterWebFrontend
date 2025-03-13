@@ -8,6 +8,7 @@ import { UserProvider } from "@/provider/UserContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Suspense } from "react";
 import Loading from "@/components/Loading";
+import { NotificationProvider } from "@/provider/NotificationProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,12 +35,13 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <UserProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <NotificationProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
               <LayoutWrapper header={header} footer={footer}>
                 <Suspense fallback={<Loading />}>
                   <main className="flex-grow container min-w-full">
@@ -48,7 +50,8 @@ export default function RootLayout({ children }) {
                 </Suspense>
               </LayoutWrapper>
               <Toaster />
-          </ThemeProvider>
+            </ThemeProvider>
+          </NotificationProvider>
         </UserProvider>
       </body>
     </html>

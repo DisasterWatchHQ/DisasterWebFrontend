@@ -28,7 +28,8 @@ export const UserProvider = ({ children }) => {
       const storedUser = localStorage.getItem("user");
 
       if (!token || !storedUser) {
-        handleLogout();
+        setUser(null);
+        setIsLoggedIn(false);
         return;
       }
 
@@ -42,7 +43,8 @@ export const UserProvider = ({ children }) => {
       setIsLoggedIn(true);
     } catch (error) {
       console.error("Auth check error:", error);
-      handleLogout();
+      setUser(null);
+      setIsLoggedIn(false);
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +80,11 @@ export const UserProvider = ({ children }) => {
         .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
     });
 
-    router.push("/auth");
+    // Only redirect to auth if we're on a protected route
+    const protectedRoutes = ['/dashboard', '/profile', '/settings'];
+    if (protectedRoutes.some(route => window.location.pathname.startsWith(route))) {
+      router.push("/auth");
+    }
   };
 
   const updateUser = (newUserData) => {

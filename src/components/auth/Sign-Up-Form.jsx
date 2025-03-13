@@ -33,19 +33,19 @@ export function SignUpForm({ onSignUpSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       setIsLoading(false);
       return;
     }
-  
+
     if (!name || !email || !password || !workId || !associatedDepartment) {
       toast.error("All fields are required");
       setIsLoading(false);
       return;
     }
-  
+
     try {
       const userData = {
         name,
@@ -55,10 +55,10 @@ export function SignUpForm({ onSignUpSuccess }) {
         associated_department: associatedDepartment,
       };
       const response = await createUser(userData);
-  
+
       toast.success("Registration successful! You can now sign in.");
       onSignUpSuccess && onSignUpSuccess();
-  
+
       setName("");
       setEmail("");
       setPassword("");
@@ -68,8 +68,8 @@ export function SignUpForm({ onSignUpSuccess }) {
     } catch (err) {
       toast.error(
         err.response?.data?.message ||
-        err.message ||
-        "An unexpected error occurred"
+          err.message ||
+          "An unexpected error occurred",
       );
     } finally {
       setIsLoading(false);

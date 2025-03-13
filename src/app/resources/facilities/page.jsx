@@ -14,7 +14,7 @@ import { MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
-import apiClient from '@/lib/api';
+import { resourceApi } from "@/lib/resourceApi";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -31,7 +31,7 @@ export default function FacilitiesPage() {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
-    totalItems: 0
+    totalItems: 0,
   });
 
   useEffect(() => {
@@ -40,30 +40,28 @@ export default function FacilitiesPage() {
         setLoading(true);
         setError(null);
 
-        const queryParams = new URLSearchParams({
+        const params = {
           page: pagination.currentPage.toString(),
-          limit: ITEMS_PER_PAGE.toString()
-        });
+          limit: ITEMS_PER_PAGE.toString(),
+        };
 
-        if (filters.type !== "all") queryParams.append("type", filters.type);
-        if (filters.city) queryParams.append("city", filters.city);
+        if (filters.type !== "all") params.type = filters.type;
+        if (filters.city) params.city = filters.city;
         if (filters.availability_status !== "all") {
-          queryParams.append("availability_status", filters.availability_status);
+          params.availability_status = filters.availability_status;
         }
 
-        const response = await apiClient.get(
-          `/resources/facilities?${queryParams}`
-        );
+        const response = await resourceApi.public.getFacilities(params);
 
-        if (response.data.success) {
-          setFacilities(response.data.resources);
+        if (response.success) {
+          setFacilities(response.resources);
           setPagination({
-            currentPage: response.data.currentPage,
-            totalPages: response.data.totalPages,
-            totalItems: response.data.totalResults
+            currentPage: response.currentPage,
+            totalPages: response.totalPages,
+            totalItems: response.totalResults,
           });
         } else {
-          throw new Error(response.data.message || "Failed to fetch facilities");
+          throw new Error(response.message || "Failed to fetch facilities");
         }
       } catch (error) {
         setError(error.message);
@@ -81,12 +79,12 @@ export default function FacilitiesPage() {
   }, [filters, pagination.currentPage, toast]);
 
   const handlePageChange = (page) => {
-    setPagination(prev => ({ ...prev, currentPage: page }));
+    setPagination((prev) => ({ ...prev, currentPage: page }));
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
   const clearFilters = () => {
@@ -95,7 +93,7 @@ export default function FacilitiesPage() {
       city: "",
       availability_status: "all",
     });
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
   return (
@@ -127,7 +125,9 @@ export default function FacilitiesPage() {
         </Select>
         <Select
           value={filters.availability_status}
-          onValueChange={(value) => handleFilterChange("availability_status", value)}
+          onValueChange={(value) =>
+            handleFilterChange("availability_status", value)
+          }
         >
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Availability" />
@@ -140,11 +140,7 @@ export default function FacilitiesPage() {
           </SelectContent>
         </Select>
 
-        <Button
-          variant="outline"
-          onClick={clearFilters}
-          className="ml-auto"
-        >
+        <Button variant="outline" onClick={clearFilters} className="ml-auto">
           Clear Filters
         </Button>
       </div>
@@ -156,7 +152,11 @@ export default function FacilitiesPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center min-h-[400px]">
           <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={() => setPagination(prev => ({ ...prev, currentPage: 1 }))}>
+          <Button
+            onClick={() =>
+              setPagination((prev) => ({ ...prev, currentPage: 1 }))
+            }
+          >
             Try Again
           </Button>
         </div>
@@ -168,7 +168,10 @@ export default function FacilitiesPage() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {facilities.map((facility) => (
-              <Card key={facility.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={facility.id}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MapPin className="h-5 w-5" />
@@ -200,7 +203,10 @@ export default function FacilitiesPage() {
                         {Object.entries(facility.operating_hours).map(
                           ([day, hours]) => (
                             <p key={day} className="capitalize">
-                              {day}: {hours.is24Hours ? "24 Hours" : `${hours.open} - ${hours.close}`}
+                              {day}:{" "}
+                              {hours.is24Hours
+                                ? "24 Hours"
+                                : `${hours.open} - ${hours.close}`}
                             </p>
                           ),
                         )}

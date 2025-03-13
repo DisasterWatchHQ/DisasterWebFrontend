@@ -40,7 +40,9 @@ export function PasswordResetForm({ onClose }) {
 
     try {
       await forgotPassword(formData);
-      toast.success("Password reset instructions have been sent to the administrator.");
+      toast.success(
+        "Password reset instructions have been sent to the administrator.",
+      );
       onClose();
     } catch (error) {
       toast.error(error.message || "Failed to send password reset request");
@@ -77,7 +79,9 @@ export function PasswordResetForm({ onClose }) {
         <Label htmlFor="department">Department</Label>
         <Select
           value={formData.department}
-          onValueChange={(value) => setFormData({ ...formData, department: value })}
+          onValueChange={(value) =>
+            setFormData({ ...formData, department: value })
+          }
           required
         >
           <SelectTrigger>

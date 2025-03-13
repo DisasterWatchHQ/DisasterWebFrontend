@@ -1,7 +1,6 @@
-import { publicClient, protectedClient } from './api';
+import { publicClient, protectedClient } from "./api";
 
 export const authApi = {
-  // Public auth endpoints
   public: {
     login: async (credentials) => {
       const response = await publicClient.post("/users/login", credentials);
@@ -31,12 +30,11 @@ export const authApi = {
     },
   },
 
-  // Protected auth endpoints
   protected: {
     changePassword: async (userId, passwordData) => {
       const response = await protectedClient.patch(
         `/users/changepassword/${userId}`,
-        passwordData
+        passwordData,
       );
       return response.data;
     },
@@ -56,7 +54,6 @@ export const authApi = {
     },
   },
 
-  // Helper functions
   getCurrentUser: () => {
     const userStr = localStorage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;

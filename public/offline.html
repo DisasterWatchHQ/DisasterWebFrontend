@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Disaster Watch</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            color: #1a1a1a;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .icon {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1.5rem;
+            color: #dc2626;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #1a1a1a;
+        }
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #4b5563;
+            margin-bottom: 2rem;
+        }
+        .button {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #dc2626;
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .button:hover {
+            background-color: #b91c1c;
+        }
+        .tips {
+            text-align: left;
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+        .tips h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #1a1a1a;
+        }
+        .tips ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .tips li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .tips li:before {
+            content: "•";
+            color: #dc2626;
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h1>You're Offline</h1>
+        <p>It seems you've lost your internet connection. Don't worry, we've got you covered with some helpful tips to stay informed about disasters even when offline.</p>
+        
+        <div class="tips">
+            <h2>What You Can Do:</h2>
+            <ul>
+                <li>Check your internet connection and try refreshing the page</li>
+                <li>Use the Disaster Watch mobile app for offline access to emergency guides</li>
+                <li>Review your saved emergency contacts and evacuation plans</li>
+                <li>Check your device's offline cache for previously loaded disaster information</li>
+                <li>Enable push notifications to receive alerts when back online</li>
+            </ul>
+        </div>
+
+        <a href="/" class="button">Try Again</a>
+    </div>
+</body>
+</html> 

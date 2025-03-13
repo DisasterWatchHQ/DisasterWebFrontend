@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
   Card,
@@ -41,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { resourceApi } from "@/lib/resourceApi"; // Import the resource API client
+import { resourceApi } from "@/lib/resourceApi";
 
 export default function GuidesPage() {
   const { toast } = useToast();
@@ -124,7 +123,7 @@ export default function GuidesPage() {
           description: "Guide created successfully",
         });
       }
-      
+
       setIsDialogOpen(false);
       resetForm();
       fetchGuides();
@@ -231,18 +230,20 @@ export default function GuidesPage() {
   const handleEdit = async (guide) => {
     setIsLoading(true);
     try {
-      // Get the most up-to-date guide data
-      const updatedGuide = await resourceApi.public.getResourceById(guide.id || guide._id);
-      setEditingGuide(updatedGuide.resource);
+      const updatedGuide = await resourceApi.public.getResourceById(
+        guide.id || guide._id,
+      );
+      setEditingGuide(updatedGuide.data);
       setFormData({
-        ...updatedGuide.resource,
+        ...updatedGuide.data,
         metadata: {
-          ...updatedGuide.resource.metadata,
+          ...updatedGuide.data.metadata,
           lastUpdated: new Date().toISOString(),
         },
       });
       setIsDialogOpen(true);
     } catch (error) {
+      console.error("Detailed error:", error);
       toast({
         title: "Error",
         description: "Failed to load guide details",
@@ -256,9 +257,10 @@ export default function GuidesPage() {
   const handleViewGuide = async (guide) => {
     setIsLoading(true);
     try {
-      // Get the most up-to-date guide data
-      const updatedGuide = await resourceApi.public.getResourceById(guide.id || guide._id);
-      setSelectedGuide(updatedGuide.resource);
+      const updatedGuide = await resourceApi.public.getResourceById(
+        guide.id || guide._id,
+      );
+      setSelectedGuide(updatedGuide.data);
     } catch (error) {
       toast({
         title: "Error",
@@ -424,7 +426,11 @@ export default function GuidesPage() {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Processing..." : (editingGuide ? "Update Guide" : "Create Guide")}
+                    {isLoading
+                      ? "Processing..."
+                      : editingGuide
+                        ? "Update Guide"
+                        : "Create Guide"}
                   </Button>
                 </div>
               </form>
@@ -507,7 +513,9 @@ export default function GuidesPage() {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDelete(guide.id || guide._id)}
+                              onClick={() =>
+                                handleDelete(guide.id || guide._id)
+                              }
                               className="bg-red-500 hover:bg-red-600"
                             >
                               Delete
@@ -519,21 +527,24 @@ export default function GuidesPage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {guide.tags && guide.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
-                      {tag}
-                    </Badge>
-                  ))}
+                  {guide.tags &&
+                    guide.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">{guide.description}</p>
+                <p className="text-muted-foreground mb-4">
+                  {guide.description}
+                </p>
               </CardContent>
               <CardFooter className="text-sm text-muted-foreground">
                 Last updated:{" "}
-                {guide.metadata && guide.metadata.lastUpdated ? 
-                  new Date(guide.metadata.lastUpdated).toLocaleDateString() : 
-                  "Unknown"}
+                {guide.metadata && guide.metadata.lastUpdated
+                  ? new Date(guide.metadata.lastUpdated).toLocaleDateString()
+                  : "Unknown"}
               </CardFooter>
             </Card>
           ))}

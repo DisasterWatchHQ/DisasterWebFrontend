@@ -17,13 +17,22 @@ export const useReports = (requireAuth = false) => {
     verified_only: false,
   });
 
+  const filterOldReports = (reports) => {
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+
+    return reports.filter((report) => {
+      const reportDate = new Date(report.date_time);
+      return reportDate >= fiveDaysAgo;
+    });
+  };
+
   const fetchReports = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       if (requireAuth) {
-        // Fetch data for authenticated users
         const [
           reportsResponse,
           statsResponse,
@@ -36,14 +45,14 @@ export const useReports = (requireAuth = false) => {
           reportApi.protected.getReportAnalytics(),
         ]);
 
-        setReports(reportsResponse.data.reports);
+        const filteredReports = filterOldReports(reportsResponse.data.reports);
+        setReports(filteredReports);
         setStats({
           ...statsResponse,
           verification: verificationStatsResponse,
         });
         setAnalytics(analyticsResponse);
       } else {
-        // Modify the public API call to include verified_only
         const [reportsResponse, feedStatsResponse] = await Promise.all([
           reportApi.public.getFeedReports({
             ...filters,
@@ -54,7 +63,8 @@ export const useReports = (requireAuth = false) => {
           reportApi.public.getFeedStats(),
         ]);
 
-        setReports(reportsResponse.data.reports);
+        const filteredReports = filterOldReports(reportsResponse.data.reports);
+        setReports(filteredReports);
         setStats({ feed: feedStatsResponse });
       }
     } catch (err) {

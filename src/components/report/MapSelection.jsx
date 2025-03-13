@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import Script from "next/script";
 
-// Sri Lanka bounds and center coordinates
 const SRI_LANKA_BOUNDS = {
   north: 9.835556,
   south: 5.916667,
@@ -31,7 +30,6 @@ export const MapPicker = ({ onLocationSelect }) => {
   useEffect(() => {
     if (!isLoaded || !window.google) return;
 
-    // Initialize map
     const initMap = () => {
       const mapInstance = new window.google.maps.Map(
         document.getElementById("picker-map"),
@@ -55,7 +53,6 @@ export const MapPicker = ({ onLocationSelect }) => {
       setMap(mapInstance);
       setGeocoder(new window.google.maps.Geocoder());
 
-      // Add click listener
       mapInstance.addListener("click", async (e) => {
         const latitude = e.latLng.lat();
         const longitude = e.latLng.lng();
@@ -98,7 +95,6 @@ export const MapPicker = ({ onLocationSelect }) => {
         }
       });
 
-      // Add search box
       const input = document.createElement("input");
       input.className = "map-search-box";
       input.placeholder = "Search for a location in Sri Lanka";
@@ -106,7 +102,6 @@ export const MapPicker = ({ onLocationSelect }) => {
         input,
       );
 
-      // Initialize SearchBox
       if (window.google.maps.places) {
         const searchBox = new window.google.maps.places.SearchBox(input);
         handleSearchBox(searchBox, mapInstance);
@@ -221,7 +216,6 @@ export const MapPicker = ({ onLocationSelect }) => {
         const result = response.results[0];
         const addressComponents = result.address_components;
 
-        // Initialize with default values
         const address = {
           city: "",
           district: "",
@@ -229,7 +223,6 @@ export const MapPicker = ({ onLocationSelect }) => {
           details: result.formatted_address,
         };
 
-        // Map address components for Sri Lanka
         addressComponents.forEach((component) => {
           const types = component.types;
 

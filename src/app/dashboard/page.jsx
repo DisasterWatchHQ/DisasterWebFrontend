@@ -76,7 +76,6 @@ const AdminDashboard = () => {
         return;
       }
 
-      // First filter the pending reports, then format them
       const formattedReports = response.data.reports
         .filter((report) => report.verification_status === "pending")
         .map((report) => ({
@@ -173,7 +172,6 @@ const AdminDashboard = () => {
 
   const handleReportAction = async (reportId, action) => {
     try {
-      // Optimistically remove the report from UI
       setPendingReports((current) =>
         current.filter((report) => report.id !== reportId),
       );
@@ -189,7 +187,6 @@ const AdminDashboard = () => {
         });
       }
 
-      // Refresh all data after successful action
       await Promise.all([
         fetchPendingReports(),
         fetchVerificationStats(),
@@ -202,10 +199,8 @@ const AdminDashboard = () => {
         description: `Report successfully ${action === "verify" ? "verified" : "dismissed"}.`,
       });
     } catch (error) {
-      // If error occurs, revert the UI and show error
       console.error(`Error ${action}ing report:`, error);
 
-      // Refresh data to ensure UI is in sync
       await Promise.all([
         fetchPendingReports(),
         fetchVerificationStats(),

@@ -1,23 +1,22 @@
-import { NextResponse } from 'next/server';
-import { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-
-const publicRoutes = ['/login', '/register', '/'];
+const publicRoutes = ["/login", "/register", "/"];
 
 export function middleware(NextRequest) {
-  const token = request.cookies.get('token');
+  const token = request.cookies.get("token");
   const { pathname } = request.nextUrl;
 
   if (publicRoutes.includes(pathname)) {
     if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.next();
   }
 
   if (!token && !publicRoutes.includes(pathname)) {
-    const redirectUrl = new URL('/login', request.url);
-    redirectUrl.searchParams.set('from', pathname);
+    const redirectUrl = new URL("/login", request.url);
+    redirectUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -32,6 +31,6 @@ export const config = {
      * - static files (_next/static/*, favicon.ico, etc.)
      * - public files (public/*)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

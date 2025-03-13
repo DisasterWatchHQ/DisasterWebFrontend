@@ -33,7 +33,7 @@ export const useLiveUpdates = () => {
 
   useEffect(() => {
     fetchUpdates();
-    const interval = setInterval(fetchUpdates, 30000); // Poll every 30 seconds
+    const interval = setInterval(fetchUpdates, 30000);
     return () => clearInterval(interval);
   }, []);
 

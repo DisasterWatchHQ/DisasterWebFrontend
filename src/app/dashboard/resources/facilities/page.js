@@ -1,11 +1,9 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
 import {
@@ -33,9 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { resourceApi } from "./api"; // Import resourceApi
+import { resourceApi } from "@/lib/resourceApi";
 
 export default function FacilitiesPage() {
   const { toast } = useToast();
@@ -97,7 +93,6 @@ export default function FacilitiesPage() {
 
   const fetchFacilities = async () => {
     try {
-      // Create params object for API call
       const params = {};
       if (filters.type !== "all") params.type = filters.type;
       if (filters.city) params.city = filters.city;
@@ -105,7 +100,6 @@ export default function FacilitiesPage() {
         params.availability_status = filters.availability_status;
       }
 
-      // Use resourceApi instead of direct fetch
       const data = await resourceApi.public.getFacilities(params);
       setFacilities(data.resources);
     } catch (error) {
@@ -163,21 +157,22 @@ export default function FacilitiesPage() {
       };
 
       if (editingFacility) {
-        // Update existing resource
-        await resourceApi.protected.updateResource(editingFacility.id, requestBody);
+        await resourceApi.protected.updateResource(
+          editingFacility.id,
+          requestBody,
+        );
         toast({
           title: "Success",
           description: "Facility updated successfully",
         });
       } else {
-        // Create new resource
         await resourceApi.protected.createResource(requestBody);
         toast({
           title: "Success",
           description: "Facility created successfully",
         });
       }
-      
+
       setIsDialogOpen(false);
       resetForm();
       fetchFacilities();
@@ -192,9 +187,8 @@ export default function FacilitiesPage() {
 
   const handleDelete = async (facilityId) => {
     try {
-      // Use resourceApi for deletion
       await resourceApi.protected.deleteResource(facilityId);
-      
+
       toast({
         title: "Success",
         description: "Facility deleted successfully",
