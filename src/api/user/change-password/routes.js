@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import apiClient from '@/lib/api';
+import apiClient from "@/lib/api";
 
 export async function POST(request) {
   try {
     const data = await request.json();
     const { userId, currentPassword, newPassword } = data;
 
-    const response = await apiClient.post(
-      `/users/changepassword/${userId}`,
-      { currentPassword, newPassword }
-    );
+    const response = await apiClient.post(`/users/changepassword/${userId}`, {
+      currentPassword,
+      newPassword,
+    });
 
     return NextResponse.json(response.data);
   } catch (error) {

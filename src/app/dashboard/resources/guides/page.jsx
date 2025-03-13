@@ -237,7 +237,7 @@ export default function GuidesPage() {
       setFormData({
         ...updatedGuide.data,
         metadata: {
-          ... updatedGuide.data.metadata,
+          ...updatedGuide.data.metadata,
           lastUpdated: new Date().toISOString(),
         },
       });

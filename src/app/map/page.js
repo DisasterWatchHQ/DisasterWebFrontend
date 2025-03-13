@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import {
   GoogleMap,
@@ -12,13 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, AlertTriangle, Locate } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { warningApi } from "@/lib/warningApi";
 import { Badge } from "@/components/ui/badge";
 
@@ -71,7 +63,6 @@ export default function Map() {
 
   useEffect(() => {
     fetchActiveWarnings();
-    // Fetch warnings every 5 minutes
     const interval = setInterval(fetchActiveWarnings, 300000);
     return () => clearInterval(interval);
   }, []);
@@ -80,14 +71,8 @@ export default function Map() {
     try {
       setIsWarningsLoading(true);
       const response = await warningApi.public.getActiveWarnings();
-      console.log("Raw response:", response); // Debug log
-
-      // Handle the correct API response structure
       const warnings = response.data || [];
-      console.log("Processed warnings:", warnings); // Debug log
-
-      // Filter out warnings without valid coordinates
-      const validWarnings = warnings.filter(warning => {
+      const validWarnings = warnings.filter((warning) => {
         const location = warning.affected_locations?.[0];
         if (!location?.coordinates) {
           console.warn(`Warning ${warning._id} has no valid coordinates`);
@@ -204,7 +189,8 @@ export default function Map() {
       </div>
       <p className="text-sm mb-2">{warning.description}</p>
       <p className="text-xs text-muted-foreground">
-        Created: {new Date(warning._id.toString().substring(0, 8)).toLocaleString()}
+        Created:{" "}
+        {new Date(warning._id.toString().substring(0, 8)).toLocaleString()}
       </p>
       {warning.updates?.length > 0 && (
         <div className="mt-2 border-t pt-2">
@@ -320,7 +306,6 @@ export default function Map() {
                   ),
                 };
 
-                // Validate position
                 if (isNaN(position.lat) || isNaN(position.lng)) return null;
 
                 return (
@@ -330,7 +315,9 @@ export default function Map() {
                       onClick={() => setSelectedWarning(warning)}
                       icon={{
                         path: google.maps.SymbolPath.CIRCLE,
-                        fillColor: SEVERITY_COLORS[warning.severity] || SEVERITY_COLORS.medium,
+                        fillColor:
+                          SEVERITY_COLORS[warning.severity] ||
+                          SEVERITY_COLORS.medium,
                         fillOpacity: 1,
                         strokeWeight: 1,
                         strokeColor: "#000000",

@@ -36,12 +36,12 @@ export default function RootLayout({ children }) {
       >
         <UserProvider>
           <NotificationProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
               <LayoutWrapper header={header} footer={footer}>
                 <Suspense fallback={<Loading />}>
                   <main className="flex-grow container min-w-full">
@@ -50,7 +50,7 @@ export default function RootLayout({ children }) {
                 </Suspense>
               </LayoutWrapper>
               <Toaster />
-          </ThemeProvider>
+            </ThemeProvider>
           </NotificationProvider>
         </UserProvider>
       </body>

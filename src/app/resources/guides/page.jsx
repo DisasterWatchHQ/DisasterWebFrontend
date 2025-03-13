@@ -1,9 +1,9 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Loader2 } from 'lucide-react';
+"use client";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,15 +16,15 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { resourceApi } from '@/lib/resourceApi';
+} from "@/components/ui/select";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { resourceApi } from "@/lib/resourceApi";
 
 export default function GuidesPage() {
   const [guides, setGuides] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
   const [selectedGuide, setSelectedGuide] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,40 +34,41 @@ export default function GuidesPage() {
       try {
         setLoading(true);
         setError(null);
-        
-        const params = selectedType !== 'all' ? { type: selectedType } : {};
+
+        const params = selectedType !== "all" ? { type: selectedType } : {};
         const response = await resourceApi.public.getGuides(params);
-        
+
         if (response.resources) {
           setGuides(response.resources);
         } else {
-          throw new Error('Failed to fetch guides data');
+          throw new Error("Failed to fetch guides data");
         }
       } catch (err) {
-        console.error('Error fetching guides:', err);
-        setError('Failed to load guides. Please try again later.');
+        console.error("Error fetching guides:", err);
+        setError("Failed to load guides. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchGuides();
   }, [selectedType]);
 
   const GuideDetailDialog = ({ guide, open, onClose }) => {
     if (!guide) return null;
-    
+
     return (
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{guide.name}</DialogTitle>
             <div className="flex gap-2 mt-2">
-              {guide.tags && guide.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
+              {guide.tags &&
+                guide.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">
+                    {tag}
+                  </Badge>
+                ))}
             </div>
           </DialogHeader>
           <div className="space-y-4">
@@ -90,15 +91,16 @@ export default function GuidesPage() {
     );
   };
 
-  const filteredGuides = guides.filter(guide =>
-    guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    guide.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredGuides = guides.filter(
+    (guide) =>
+      guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      guide.description.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <h1 className="text-3xl font-bold">Emergency Guides</h1>
-      
+
       <div className="flex gap-4">
         <Input
           placeholder="Search guides..."
@@ -134,19 +136,20 @@ export default function GuidesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGuides.map((guide) => (
-            <Card 
-              key={guide.id} 
+            <Card
+              key={guide.id}
               className="hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setSelectedGuide(guide)}
             >
               <CardHeader>
                 <CardTitle>{guide.name}</CardTitle>
                 <div className="flex gap-2">
-                  {guide.tags && guide.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
-                      {tag}
-                    </Badge>
-                  ))}
+                  {guide.tags &&
+                    guide.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
                 </div>
               </CardHeader>
               <CardContent>

@@ -1,4 +1,4 @@
-import { authApi } from '@/lib/authApi';
+import { authApi } from "@/lib/authApi";
 
 export const createUser = async (userData) => {
   try {

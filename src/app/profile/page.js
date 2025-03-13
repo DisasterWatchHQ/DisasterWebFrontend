@@ -42,26 +42,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 import { ChangePassword } from "@/components/common/ChangePassword";
-import Image from "next/image";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const getUserProfile = async (userId) => {
   try {
-    console.log("Fetching profile for user:", userId);
-    console.log("Using API URL:", API_BASE_URL);
     
     const response = await fetch(`${API_BASE_URL}/users/me`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
-    
-    console.log("Response status:", response.status);
+
     const data = await response.json();
-    console.log("Response data:", data);
-    
+
     if (!response.ok) {
       throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
     }
@@ -136,16 +131,13 @@ export default function Profile() {
     const fetchUserProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        console.log("Token:", token ? "Present" : "Missing");
         
         if (!token) {
           router.push("/auth");
           return;
         }
 
-        // Get user data from localStorage first
         const storedUser = localStorage.getItem("user");
-        console.log("Stored user:", storedUser ? "Present" : "Missing");
         
         if (!storedUser) {
           router.push("/auth");
@@ -153,7 +145,6 @@ export default function Profile() {
         }
 
         const parsedUser = JSON.parse(storedUser);
-        console.log("Parsed user:", parsedUser);
         
         const userData = await getUserProfile(parsedUser.id);
 
@@ -388,7 +379,6 @@ export default function Profile() {
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
-          {/* Profile Overview Card */}
           <Card>
             <CardHeader className="flex flex-row items-center space-x-4 pb-2">
               <div className="relative">
@@ -456,7 +446,6 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          {/* Edit Profile Form */}
           <Card>
             <CardHeader>
               <CardTitle>Edit Profile</CardTitle>
@@ -514,7 +503,7 @@ export default function Profile() {
                                 };
                                 setUser((prev) => ({
                                   ...prev,
-                                  location: locationData, // This matches your mongoose schema
+                                  location: locationData, 
                                 }));
                                 toast({
                                   title: "Location updated",

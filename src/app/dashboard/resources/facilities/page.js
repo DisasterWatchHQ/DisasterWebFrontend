@@ -157,7 +157,10 @@ export default function FacilitiesPage() {
       };
 
       if (editingFacility) {
-        await resourceApi.protected.updateResource(editingFacility.id, requestBody);
+        await resourceApi.protected.updateResource(
+          editingFacility.id,
+          requestBody,
+        );
         toast({
           title: "Success",
           description: "Facility updated successfully",
@@ -169,7 +172,7 @@ export default function FacilitiesPage() {
           description: "Facility created successfully",
         });
       }
-      
+
       setIsDialogOpen(false);
       resetForm();
       fetchFacilities();
@@ -185,7 +188,7 @@ export default function FacilitiesPage() {
   const handleDelete = async (facilityId) => {
     try {
       await resourceApi.protected.deleteResource(facilityId);
-      
+
       toast({
         title: "Success",
         description: "Facility deleted successfully",

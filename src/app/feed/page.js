@@ -260,7 +260,6 @@ export default function DisasterFeed() {
           </div>
         </div>
       ) : (
-        /* Warning display */
         activeWarnings?.length > 0 && (
           <div className="bg-warning/20 p-2">
             <ScrollArea className="w-full whitespace-nowrap">
@@ -301,7 +300,7 @@ export default function DisasterFeed() {
           </div>
         )
       )}
-      
+
       <WarningDetailDialog
         warning={selectedWarning}
         open={!!selectedWarning}

@@ -5,7 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Phone } from "lucide-react";
 import { resourceApi } from "@/lib/resourceApi";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function EmergencyContactsPage() {
   const [contacts, setContacts] = useState([]);
@@ -28,19 +34,20 @@ export default function EmergencyContactsPage() {
         setLoading(false);
       }
     };
-    
+
     fetchContacts();
   }, []);
 
-  const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = 
+  const filteredContacts = contacts.filter((contact) => {
+    const matchesSearch =
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.contact?.phone?.includes(searchTerm) ||
       contact.contact?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesLevel = selectedLevel === "all" || contact.emergency_level === selectedLevel;
-    
+
+    const matchesLevel =
+      selectedLevel === "all" || contact.emergency_level === selectedLevel;
+
     return matchesSearch && matchesLevel;
   });
 
@@ -65,7 +72,7 @@ export default function EmergencyContactsPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <h1 className="text-3xl font-bold">Emergency Contacts</h1>
-      
+
       <div className="flex gap-4">
         <Input
           placeholder="Search contacts..."
@@ -93,7 +100,10 @@ export default function EmergencyContactsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredContacts.map((contact) => (
-            <Card key={contact.id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={contact.id}
+              className="hover:shadow-lg transition-shadow"
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Phone className="h-5 w-5" />
@@ -112,13 +122,19 @@ export default function EmergencyContactsPage() {
               <CardContent>
                 <div className="space-y-2">
                   {contact.contact?.phone && (
-                    <p className="font-medium">Phone: {contact.contact.phone}</p>
+                    <p className="font-medium">
+                      Phone: {contact.contact.phone}
+                    </p>
                   )}
                   {contact.contact?.email && (
-                    <p className="font-medium">Email: {contact.contact.email}</p>
+                    <p className="font-medium">
+                      Email: {contact.contact.email}
+                    </p>
                   )}
                   {contact.description && (
-                    <p className="text-muted-foreground">{contact.description}</p>
+                    <p className="text-muted-foreground">
+                      {contact.description}
+                    </p>
                   )}
                   {contact.tags && contact.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">

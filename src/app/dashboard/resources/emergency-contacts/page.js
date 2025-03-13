@@ -97,9 +97,12 @@ export default function EmergencyContactsPage() {
 
     try {
       setIsLoading(true);
-      
+
       if (editingContact) {
-        await resourceApi.protected.updateResource(editingContact._id, formData);
+        await resourceApi.protected.updateResource(
+          editingContact._id,
+          formData,
+        );
         toast({
           title: "Success",
           description: "Emergency contact updated successfully",
@@ -111,14 +114,15 @@ export default function EmergencyContactsPage() {
           description: "Emergency contact created successfully",
         });
       }
-      
+
       setIsDialogOpen(false);
       resetForm();
       fetchContacts();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.response?.data?.error || error.message || "An error occurred",
+        description:
+          error.response?.data?.error || error.message || "An error occurred",
         variant: "destructive",
       });
     } finally {
@@ -138,7 +142,8 @@ export default function EmergencyContactsPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: error.response?.data?.error || error.message || "An error occurred",
+        description:
+          error.response?.data?.error || error.message || "An error occurred",
         variant: "destructive",
       });
     } finally {
@@ -174,15 +179,16 @@ export default function EmergencyContactsPage() {
     setEditingContact(null);
   };
 
-  const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = 
+  const filteredContacts = contacts.filter((contact) => {
+    const matchesSearch =
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.contact?.phone?.includes(searchTerm) ||
       contact.contact?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesLevel = selectedLevel === "all" || contact.emergency_level === selectedLevel;
-    
+
+    const matchesLevel =
+      selectedLevel === "all" || contact.emergency_level === selectedLevel;
+
     return matchesSearch && matchesLevel;
   });
 
@@ -282,7 +288,10 @@ export default function EmergencyContactsPage() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    tags: e.target.value.split(",").map((tag) => tag.trim()).filter(tag => tag),
+                    tags: e.target.value
+                      .split(",")
+                      .map((tag) => tag.trim())
+                      .filter((tag) => tag),
                   })
                 }
               />
@@ -300,7 +309,11 @@ export default function EmergencyContactsPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Processing..." : editingContact ? "Update Contact" : "Add Contact"}
+                  {isLoading
+                    ? "Processing..."
+                    : editingContact
+                      ? "Update Contact"
+                      : "Add Contact"}
                 </Button>
               </div>
             </form>
@@ -339,7 +352,10 @@ export default function EmergencyContactsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredContacts.map((contact) => (
-            <Card key={contact._id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={contact._id}
+              className="hover:shadow-lg transition-shadow"
+            >
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="flex items-center gap-2">
