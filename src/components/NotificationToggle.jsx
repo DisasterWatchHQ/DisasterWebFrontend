@@ -1,5 +1,4 @@
 'use client';
-
 import { Button } from '@/components/ui/button';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { useNotifications } from '@/provider/NotificationProvider';
@@ -14,7 +13,6 @@ export function NotificationToggle() {
   const { isLoggedIn } = useUser();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Handle error state
   useEffect(() => {
     if (error) {
       toast({
@@ -39,14 +37,12 @@ export function NotificationToggle() {
       setIsLoading(true);
       
       if (subscription) {
-        // Unsubscribe from notifications
         await unsubscribe();
         toast({
           title: "Notifications Disabled",
           description: "You will no longer receive push notifications.",
         });
       } else {
-        // Request permission and subscribe
         const newPermission = await requestNotificationPermission();
         if (newPermission === 'granted') {
           toast({

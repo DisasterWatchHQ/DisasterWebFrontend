@@ -9,7 +9,6 @@ export default function Footer() {
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4 items-start">
-
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">DisasterWatch</h3>
             <p className="text-sm text-muted-foreground">

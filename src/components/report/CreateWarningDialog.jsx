@@ -101,13 +101,11 @@ const CreateWarningDialog = ({ open, onOpenChange }) => {
   const handleLocationSelect = (location) => {
     if (!location) return;
 
-    // Set coordinates
     form.setValue("affected_locations.0.coordinates", {
       latitude: location.latitude || null,
       longitude: location.longitude || null,
     });
 
-    // Set address with fallbacks
     const address = location.address || {};
     form.setValue("affected_locations.0.address", {
       city: address.city || "Unknown",
@@ -116,7 +114,6 @@ const CreateWarningDialog = ({ open, onOpenChange }) => {
       details: address.details || "",
     });
 
-    // Show address edit form if some information is missing
     if (!address || !address.city || !address.district || !address.province) {
       setShowAddressEdit(true);
       toast({

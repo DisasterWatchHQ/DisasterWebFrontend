@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import Script from "next/script";
 
-// Sri Lanka bounds and center coordinates
 const SRI_LANKA_BOUNDS = {
   north: 9.835556,
   south: 5.916667,

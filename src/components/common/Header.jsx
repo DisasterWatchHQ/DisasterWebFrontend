@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import * as React from "react";
 import Link from "next/link";
@@ -23,7 +23,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { NotificationToggle } from '@/components/NotificationToggle';
+import { NotificationToggle } from "@/components/NotificationToggle";
 
 const routes = [
   { href: "/map", label: "Map" },
@@ -65,13 +65,14 @@ const privateLinks = [
     label: "Resources",
     dropdown: [
       { href: "/dashboard/resources/guides", label: "Guides" },
-      { href: "/dashboard/resources/emergency-contacts", label: "Emergency Contacts" },
+      {
+        href: "/dashboard/resources/emergency-contacts",
+        label: "Emergency Contacts",
+      },
       { href: "/dashboard/resources/facilities", label: "Facilities" },
     ],
   },
 ];
-
-
 
 export default function Header() {
   const pathname = usePathname();
