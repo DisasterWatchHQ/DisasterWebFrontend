@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { resourceApi } from "@/lib/resourceApi"; // Import the resource API client
+import { resourceApi } from "@/lib/resourceApi";
 
 export default function EmergencyContactsPage() {
   const { toast } = useToast();
