@@ -82,11 +82,22 @@ export default function Map() {
       const response = await warningApi.public.getActiveWarnings();
       console.log("Raw response:", response); // Debug log
 
-      // Ensure we're getting an array of warnings
-      const warnings = response.data?.warnings || [];
+      // Handle the correct API response structure
+      const warnings = response.data || [];
       console.log("Processed warnings:", warnings); // Debug log
 
-      setActiveWarnings(Array.isArray(warnings) ? warnings : []);
+      // Filter out warnings without valid coordinates
+      const validWarnings = warnings.filter(warning => {
+        const location = warning.affected_locations?.[0];
+        if (!location?.coordinates) {
+          console.warn(`Warning ${warning._id} has no valid coordinates`);
+          return false;
+        }
+        const { latitude, longitude } = location.coordinates;
+        return !isNaN(latitude) && !isNaN(longitude);
+      });
+
+      setActiveWarnings(validWarnings);
     } catch (error) {
       console.error("Error fetching warnings:", error);
       setLocationError("Failed to fetch active warnings");
@@ -193,7 +204,7 @@ export default function Map() {
       </div>
       <p className="text-sm mb-2">{warning.description}</p>
       <p className="text-xs text-muted-foreground">
-        Created: {new Date(warning.created_at).toLocaleString()}
+        Created: {new Date(warning._id.toString().substring(0, 8)).toLocaleString()}
       </p>
       {warning.updates?.length > 0 && (
         <div className="mt-2 border-t pt-2">
@@ -318,10 +329,8 @@ export default function Map() {
                       position={position}
                       onClick={() => setSelectedWarning(warning)}
                       icon={{
-                        path: google.maps.SymbolPath.WARNING,
-                        fillColor:
-                          SEVERITY_COLORS[warning.severity] ||
-                          SEVERITY_COLORS.medium,
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: SEVERITY_COLORS[warning.severity] || SEVERITY_COLORS.medium,
                         fillOpacity: 1,
                         strokeWeight: 1,
                         strokeColor: "#000000",
