@@ -1,18 +1,16 @@
-'use client';
-
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+"use client";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import {
   checkNotificationPermission,
   subscribeToPushNotifications,
   unsubscribeFromPushNotifications,
-  showNotification,
-  requestNotificationPermission
-} from '@/lib/notifications';
-import { useUser } from './UserContext';
+  requestNotificationPermission,
+} from "@/lib/notifications";
+import { useUser } from "./UserContext";
 
 const NotificationContext = createContext({
-  permission: 'default',
+  permission: "default",
   subscription: null,
   error: null,
   requestPermission: async () => {},
@@ -21,28 +19,28 @@ const NotificationContext = createContext({
 });
 
 export function NotificationProvider({ children }) {
-  const [permission, setPermission] = useState('default');
+  const [permission, setPermission] = useState("default");
   const [subscription, setSubscription] = useState(null);
-  const [serviceWorkerRegistration, setServiceWorkerRegistration] = useState(null);
+  const [serviceWorkerRegistration, setServiceWorkerRegistration] =
+    useState(null);
   const [error, setError] = useState(null);
   const { toast } = useToast();
   const { isLoggedIn } = useUser();
 
   const handlePermissionChange = (event) => {
-    if (event.target.state === 'granted') {
-      setPermission('granted');
-      // Automatically subscribe when permission is granted
+    if (event.target.state === "granted") {
+      setPermission("granted");
       subscribeToPushNotifications()
         .then(setSubscription)
         .catch((error) => {
-          console.error('Error subscribing to push notifications:', error);
-          setError('Failed to subscribe to notifications');
+          console.error("Error subscribing to push notifications:", error);
+          setError("Failed to subscribe to notifications");
         });
-    } else if (event.target.state === 'denied') {
-      setPermission('denied');
+    } else if (event.target.state === "denied") {
+      setPermission("denied");
       setSubscription(null);
     } else {
-      setPermission('default');
+      setPermission("default");
       setSubscription(null);
     }
   };
@@ -52,40 +50,37 @@ export function NotificationProvider({ children }) {
       try {
         setError(null);
 
-        // Check if the browser supports notifications
-        if (!('Notification' in window)) {
-          throw new Error('This browser does not support notifications');
+        if (!("Notification" in window)) {
+          throw new Error("This browser does not support notifications");
         }
 
-        // Check if service workers are supported
-        if (!('serviceWorker' in navigator)) {
-          throw new Error('Service workers are not supported in this browser');
+        if (!("serviceWorker" in navigator)) {
+          throw new Error("Service workers are not supported in this browser");
         }
 
-        // Check notification permission
         const currentPermission = await checkNotificationPermission();
         setPermission(currentPermission);
 
-        // Register service worker with retry logic
         let registration;
         try {
-          registration = await navigator.serviceWorker.register('/service-worker.js');
+          registration =
+            await navigator.serviceWorker.register("/service-worker.js");
         } catch (error) {
-          console.error('Service worker registration failed:', error);
-          // Retry once after a delay
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          registration = await navigator.serviceWorker.register('/service-worker.js');
+          console.error("Service worker registration failed:", error);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          registration =
+            await navigator.serviceWorker.register("/service-worker.js");
         }
 
         setServiceWorkerRegistration(registration);
 
-        // Check for existing subscription
-        const existingSubscription = await registration.pushManager.getSubscription();
+        const existingSubscription =
+          await registration.pushManager.getSubscription();
         if (existingSubscription) {
           setSubscription(existingSubscription);
         }
       } catch (error) {
-        console.error('Error initializing notifications:', error);
+        console.error("Error initializing notifications:", error);
         setError(error.message);
         toast({
           title: "Notification Error",
@@ -99,38 +94,38 @@ export function NotificationProvider({ children }) {
   }, [toast]);
 
   useEffect(() => {
-    // Check if notifications are supported
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-      setError('Push notifications are not supported in this browser');
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+      setError("Push notifications are not supported in this browser");
       return;
     }
 
-    // Check initial permission state
     setPermission(Notification.permission);
 
-    // If permission is already granted, try to get subscription
-    if (Notification.permission === 'granted') {
+    if (Notification.permission === "granted") {
       navigator.serviceWorker.ready
         .then((registration) => registration.pushManager.getSubscription())
         .then(setSubscription)
         .catch((error) => {
-          console.error('Error getting push subscription:', error);
-          setError('Failed to get push subscription');
+          console.error("Error getting push subscription:", error);
+          setError("Failed to get push subscription");
         });
     }
 
-    // Listen for permission changes
-    if ('permissions' in navigator) {
-      navigator.permissions.query({ name: 'notifications' })
+    if ("permissions" in navigator) {
+      navigator.permissions
+        .query({ name: "notifications" })
         .then((permissionStatus) => {
-          permissionStatus.addEventListener('change', handlePermissionChange);
+          permissionStatus.addEventListener("change", handlePermissionChange);
           return () => {
-            permissionStatus.removeEventListener('change', handlePermissionChange);
+            permissionStatus.removeEventListener(
+              "change",
+              handlePermissionChange,
+            );
           };
         })
         .catch((error) => {
-          console.error('Error setting up permission listener:', error);
-          setError('Failed to set up permission listener');
+          console.error("Error setting up permission listener:", error);
+          setError("Failed to set up permission listener");
         });
     }
   }, []);
@@ -141,23 +136,25 @@ export function NotificationProvider({ children }) {
       const newPermission = await requestNotificationPermission();
       setPermission(newPermission);
 
-      if (newPermission === 'granted') {
+      if (newPermission === "granted") {
         const newSubscription = await subscribeToPushNotifications();
         setSubscription(newSubscription);
         toast({
           title: "Notifications Enabled",
-          description: "You will now receive important updates about disasters in your area.",
+          description:
+            "You will now receive important updates about disasters in your area.",
         });
-      } else if (newPermission === 'denied') {
+      } else if (newPermission === "denied") {
         toast({
           title: "Notifications Blocked",
-          description: "Please enable notifications in your browser settings to receive updates.",
+          description:
+            "Please enable notifications in your browser settings to receive updates.",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error requesting notification permission:', error);
-      setError('Failed to request notification permission');
+      console.error("Error requesting notification permission:", error);
+      setError("Failed to request notification permission");
       toast({
         title: "Error",
         description: "Failed to enable notifications. Please try again.",
@@ -176,8 +173,8 @@ export function NotificationProvider({ children }) {
         description: "You will no longer receive push notifications.",
       });
     } catch (error) {
-      console.error('Error unsubscribing from notifications:', error);
-      setError('Failed to unsubscribe from notifications');
+      console.error("Error unsubscribing from notifications:", error);
+      setError("Failed to unsubscribe from notifications");
       toast({
         title: "Error",
         description: "Failed to disable notifications. Please try again.",
@@ -188,14 +185,14 @@ export function NotificationProvider({ children }) {
 
   const sendNotification = async (title, options = {}) => {
     if (!subscription) {
-      throw new Error('No active subscription');
+      throw new Error("No active subscription");
     }
 
     try {
-      const response = await fetch('/api/notifications/send', {
-        method: 'POST',
+      const response = await fetch("/api/notifications/send", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title,
@@ -204,12 +201,12 @@ export function NotificationProvider({ children }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send notification');
+        throw new Error("Failed to send notification");
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error("Error sending notification:", error);
       throw error;
     }
   };
@@ -233,7 +230,9 @@ export function NotificationProvider({ children }) {
 export function useNotifications() {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider",
+    );
   }
   return context;
-} 
+}

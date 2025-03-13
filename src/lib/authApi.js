@@ -1,4 +1,4 @@
-import { publicClient, protectedClient } from './api';
+import { publicClient, protectedClient } from "./api";
 
 export const authApi = {
   public: {
@@ -34,7 +34,7 @@ export const authApi = {
     changePassword: async (userId, passwordData) => {
       const response = await protectedClient.patch(
         `/users/changepassword/${userId}`,
-        passwordData
+        passwordData,
       );
       return response.data;
     },
