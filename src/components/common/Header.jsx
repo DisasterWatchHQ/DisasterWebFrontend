@@ -22,7 +22,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"; 
+} from "@/components/ui/dropdown-menu";
+import { NotificationToggle } from '@/components/NotificationToggle';
 
 const routes = [
   { href: "/map", label: "Map" },
@@ -199,40 +200,43 @@ export default function Header() {
           </SheetContent>
         </Sheet>
 
-        <div className="flex items-center justify-end ml-auto space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="h-9 w-9"
-          >
-            {theme === "light" ? (
-              <Moon className="h-4 w-4" />
-            ) : (
-              <Sun className="h-4 w-4" />
-            )}
-          </Button>
+        <div className="flex items-center gap-2">
+          <NotificationToggle />
+          <div className="flex items-center justify-end ml-auto space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-9 w-9"
+            >
+              {theme === "light" ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+            </Button>
 
-          {isLoggedIn ? (
-            <>
-              <Avatar>
-                <AvatarImage src={user.avatar || "/placeholder-avatar.png"} />
-                <AvatarFallback>
-                  {user.name ? user.name.charAt(0) : "U"}
-                </AvatarFallback>
-              </Avatar>
-              <Link href="/profile">
-                <Button variant="ghost">Profile</Button>
+            {isLoggedIn ? (
+              <>
+                <Avatar>
+                  <AvatarImage src={user.avatar || "/placeholder-avatar.png"} />
+                  <AvatarFallback>
+                    {user.name ? user.name.charAt(0) : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <Link href="/profile">
+                  <Button variant="ghost">Profile</Button>
+                </Link>
+                <Link href="/auth" onClick={handleLogout}>
+                  <Button variant="destructive">Logout</Button>
+                </Link>
+              </>
+            ) : (
+              <Link href="/auth">
+                <Button>Login</Button>
               </Link>
-              <Link href="/auth" onClick={handleLogout}>
-                <Button variant="destructive">Logout</Button>
-              </Link>
-            </>
-          ) : (
-            <Link href="/auth">
-              <Button>Login</Button>
-            </Link>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </header>
