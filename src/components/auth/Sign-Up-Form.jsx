@@ -52,25 +52,34 @@ export function SignUpForm({ onSignUpSuccess }) {
         email,
         password,
         workId,
-        associated_department: associatedDepartment,
+        associatedDepartment,
       };
       const response = await createUser(userData);
 
-      toast.success("Registration successful! You can now sign in.");
-      onSignUpSuccess && onSignUpSuccess();
+      if (response.success) {
+        toast.success("Registration successful! You can now sign in.");
+        onSignUpSuccess && onSignUpSuccess();
 
-      setName("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setWorkId("");
-      setAssociatedDepartment("");
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setWorkId("");
+        setAssociatedDepartment("");
+      } else {
+        throw new Error(response.message || "Registration failed");
+      }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          err.message ||
-          "An unexpected error occurred",
-      );
+      console.error("Registration error:", err);
+      
+      let errorMessage = "An unexpected error occurred";
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
