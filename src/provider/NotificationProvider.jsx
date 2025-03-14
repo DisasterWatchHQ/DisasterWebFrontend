@@ -27,20 +27,19 @@ export function NotificationProvider({ children }) {
   const { toast } = useToast();
   const { isLoggedIn } = useUser();
 
-  const handlePermissionChange = (event) => {
-    if (event.target.state === "granted") {
-      setPermission("granted");
-      subscribeToPushNotifications()
-        .then(setSubscription)
-        .catch((error) => {
-          console.error("Error subscribing to push notifications:", error);
-          setError("Failed to subscribe to notifications");
-        });
-    } else if (event.target.state === "denied") {
-      setPermission("denied");
-      setSubscription(null);
+  const handlePermissionChange = async (permissionStatus) => {
+    const newState = permissionStatus.state;
+    setPermission(newState);
+    
+    if (newState === "granted" && serviceWorkerRegistration) {
+      try {
+        const newSubscription = await subscribeToPushNotifications(serviceWorkerRegistration);
+        setSubscription(newSubscription);
+      } catch (error) {
+        console.error("Error subscribing to push notifications:", error);
+        setError("Failed to subscribe to notifications");
+      }
     } else {
-      setPermission("default");
       setSubscription(null);
     }
   };
@@ -63,20 +62,20 @@ export function NotificationProvider({ children }) {
 
         let registration;
         try {
-          registration =
-            await navigator.serviceWorker.register("/service-worker.js");
+          registration = await navigator.serviceWorker.ready;
+          if (!registration) {
+            registration = await navigator.serviceWorker.register("/service-worker.js");
+          }
         } catch (error) {
           console.error("Service worker registration failed:", error);
           await new Promise((resolve) => setTimeout(resolve, 1000));
-          registration =
-            await navigator.serviceWorker.register("/service-worker.js");
+          registration = await navigator.serviceWorker.register("/service-worker.js");
         }
 
         setServiceWorkerRegistration(registration);
 
-        const existingSubscription =
-          await registration.pushManager.getSubscription();
-        if (existingSubscription) {
+        if (currentPermission === "granted") {
+          const existingSubscription = await registration.pushManager.getSubscription();
           setSubscription(existingSubscription);
         }
       } catch (error) {
@@ -99,28 +98,14 @@ export function NotificationProvider({ children }) {
       return;
     }
 
-    setPermission(Notification.permission);
-
-    if (Notification.permission === "granted") {
-      navigator.serviceWorker.ready
-        .then((registration) => registration.pushManager.getSubscription())
-        .then(setSubscription)
-        .catch((error) => {
-          console.error("Error getting push subscription:", error);
-          setError("Failed to get push subscription");
-        });
-    }
-
     if ("permissions" in navigator) {
       navigator.permissions
         .query({ name: "notifications" })
         .then((permissionStatus) => {
-          permissionStatus.addEventListener("change", handlePermissionChange);
+          handlePermissionChange(permissionStatus);
+          permissionStatus.addEventListener("change", () => handlePermissionChange(permissionStatus));
           return () => {
-            permissionStatus.removeEventListener(
-              "change",
-              handlePermissionChange,
-            );
+            permissionStatus.removeEventListener("change", () => handlePermissionChange(permissionStatus));
           };
         })
         .catch((error) => {
@@ -128,27 +113,31 @@ export function NotificationProvider({ children }) {
           setError("Failed to set up permission listener");
         });
     }
-  }, []);
+  }, [serviceWorkerRegistration]);
 
   const requestPermission = async () => {
     try {
       setError(null);
+      
+      if (!serviceWorkerRegistration) {
+        throw new Error("Service worker not initialized");
+      }
+
       const newPermission = await requestNotificationPermission();
       setPermission(newPermission);
 
       if (newPermission === "granted") {
-        const newSubscription = await subscribeToPushNotifications();
+        const newSubscription = await subscribeToPushNotifications(serviceWorkerRegistration);
         setSubscription(newSubscription);
         toast({
           title: "Notifications Enabled",
-          description:
-            "You will now receive important updates about disasters in your area.",
+          description: "You will now receive important updates about disasters in your area.",
         });
       } else if (newPermission === "denied") {
+        setSubscription(null);
         toast({
           title: "Notifications Blocked",
-          description:
-            "Please enable notifications in your browser settings to receive updates.",
+          description: "Please enable notifications in your browser settings to receive updates.",
           variant: "destructive",
         });
       }
@@ -166,7 +155,12 @@ export function NotificationProvider({ children }) {
   const unsubscribe = async () => {
     try {
       setError(null);
-      await unsubscribeFromPushNotifications();
+      
+      if (!serviceWorkerRegistration) {
+        throw new Error("Service worker not initialized");
+      }
+
+      await unsubscribeFromPushNotifications(serviceWorkerRegistration);
       setSubscription(null);
       toast({
         title: "Notifications Disabled",

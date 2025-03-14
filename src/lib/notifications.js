@@ -19,9 +19,19 @@ export const requestNotificationPermission = async () => {
 
 export const subscribeToPushNotifications = async (registration) => {
   try {
+    if (!registration) {
+      throw new Error("Service worker registration is required");
+    }
+
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
     if (!vapidPublicKey) {
       throw new Error("VAPID public key is not configured");
+    }
+
+    // Check for existing subscription first
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      return existingSubscription;
     }
 
     const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
@@ -66,34 +76,42 @@ export const subscribeToPushNotifications = async (registration) => {
 
 export const unsubscribeFromPushNotifications = async (registration) => {
   try {
-    const subscription = await registration.pushManager.getSubscription();
-    if (subscription) {
-      await subscription.unsubscribe();
-
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error(
-          "User must be logged in to unsubscribe from notifications",
-        );
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/notifications/web/unsubscribe`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(
-          error.message || "Failed to unsubscribe from notifications",
-        );
-      }
+    if (!registration) {
+      throw new Error("Service worker registration is required");
     }
+
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      return; // Already unsubscribed
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("User must be logged in to unsubscribe from notifications");
+    }
+
+    // Unsubscribe from backend first
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/notifications/web/unsubscribe`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          endpoint: subscription.endpoint,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to unsubscribe from notifications");
+    }
+
+    // Then unsubscribe locally
+    await subscription.unsubscribe();
   } catch (error) {
     console.error("Error unsubscribing from push notifications:", error);
     throw error;
