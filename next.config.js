@@ -20,7 +20,6 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
   // Configure headers for security
   async headers() {
     return [
