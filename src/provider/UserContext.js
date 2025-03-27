@@ -19,7 +19,6 @@ export const UserProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication status on mount
     checkAuth();
   }, []);
 
@@ -29,11 +28,11 @@ export const UserProvider = ({ children }) => {
       const storedUser = localStorage.getItem("user");
 
       if (!token || !storedUser) {
-        handleLogout();
+        setUser(null);
+        setIsLoggedIn(false);
         return;
       }
 
-      // Check token expiration
       const userData = JSON.parse(storedUser);
       if (isTokenExpired(token)) {
         handleLogout();
@@ -44,7 +43,8 @@ export const UserProvider = ({ children }) => {
       setIsLoggedIn(true);
     } catch (error) {
       console.error("Auth check error:", error);
-      handleLogout();
+      setUser(null);
+      setIsLoggedIn(false);
     } finally {
       setIsLoading(false);
     }
@@ -72,18 +72,19 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
 
-    // Clear any other auth-related storage
     sessionStorage.clear();
 
-    // Optional: Clear cookies if you're using them
     document.cookie.split(";").forEach((cookie) => {
       document.cookie = cookie
         .replace(/^ +/, "")
         .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
     });
 
-    // Redirect to login page
-    router.push("/auth");
+    // Only redirect to auth if we're on a protected route
+    const protectedRoutes = ['/dashboard', '/profile', '/settings'];
+    if (protectedRoutes.some(route => window.location.pathname.startsWith(route))) {
+      router.push("/auth");
+    }
   };
 
   const updateUser = (newUserData) => {
@@ -92,9 +93,8 @@ export const UserProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
-  // Don't render children until initial auth check is complete
   if (isLoading) {
-    return null; // or a loading spinner
+    return null;
   }
 
   return (

@@ -7,10 +7,13 @@ import Footer from "@/components/common/Footer";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/provider/UserContext";
 import { Toaster } from "@/components/ui/toaster";
+import { Suspense } from "react";
+import Loading from "@/components/Loading";
+import { NotificationProvider } from "@/provider/NotificationProvider";
 
 export const metadata = {
-  title: "DisasterWatch",
-  description: "A platform designed to provide real-time information and alerts about natural disasters.",
+  title: "Disaster Web App",
+  description: "Real-time disaster monitoring and notification system",
 };
 
 export default function RootLayout({ children }) {
@@ -24,17 +27,23 @@ export default function RootLayout({ children }) {
     >
       <body className="antialiased flex flex-col min-h-screen">
         <UserProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <LayoutWrapper header={header} footer={footer}>
-              <main className="flex-grow container min-w-full">{children}</main>
-            </LayoutWrapper>
-          </ThemeProvider>
-          <Toaster />
+          <NotificationProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <LayoutWrapper header={header} footer={footer}>
+                <Suspense fallback={<Loading />}>
+                  <main className="flex-grow container min-w-full">
+                    {children}
+                  </main>
+                </Suspense>
+              </LayoutWrapper>
+              <Toaster />
+            </ThemeProvider>
+          </NotificationProvider>
         </UserProvider>
       </body>
     </html>

@@ -1,4 +1,6 @@
-/ @type {import('next').NextConfig} */
+
+/** @type {import('next').NextConfig} */
+
 const nextConfig = {
   images: {
     domains: ['localhost', process.env.NEXT_PUBLIC_API_URL?.replace(/^https?:\/\//, '')],
@@ -7,12 +9,12 @@ const nextConfig = {
         protocol: 'http',
         hostname: 'localhost',
         port: '5000',
-        pathname: '/uploads/',
+        pathname: '/uploads/**',
       },
       {
         protocol: 'https',
         hostname: process.env.NEXT_PUBLIC_API_URL?.replace(/^https?:\/\//, ''),
-        pathname: '/uploads/*',
+        pathname: '/uploads/**',
       },
     ],
   },
@@ -24,7 +26,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:path',
+        source: '/:path*',
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
@@ -51,4 +53,5 @@ const nextConfig = {
     ];
   }
 };
+
 module.exports = nextConfig;

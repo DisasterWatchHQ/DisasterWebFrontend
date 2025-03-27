@@ -16,16 +16,9 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
-  User,
-  Mail,
   Building,
   MapPin,
-  Phone,
   Calendar,
-  Bell,
-  Shield,
-  Language,
-  LogOut,
   Upload,
   Trash2,
 } from "lucide-react";
@@ -47,72 +40,153 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// import { useUser } from "../../providers/UserContext";
-// import { getUserProfile, updateUser, deleteUser } from "@/utils/apiUser";
-// import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ChangePassword } from "@/components/common/ChangePassword";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+const getUserProfile = async (userId) => {
+  try {
+    
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+    }
+    return data;
+  } catch (error) {
+    console.error("getUserProfile error:", error);
+    throw new Error(error.message || "Failed to fetch user profile");
+  }
+};
+
+const updateUser = async (userId, userData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(userData),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "Failed to update user");
+  }
+};
+
+const deleteUser = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "Failed to delete user");
+  }
+};
+
+const updateUserPreferences = async (preferences) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/preferences`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ preferences }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    throw new Error(error.message || "Failed to update preferences");
+  }
+};
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [avatar, setAvatar] = useState(null);
-  const [isChangePassword,setIsChangePasswordOpen] = useState(false);
+  const [isChangePassword, setIsChangePasswordOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const userId = localStorage.getItem("userId");
-
-        if (!userId) {
-          setUser({
-            name: "Anonymous User",
-            email: "anonymous@example.com",
-            location: null,
-            organization: "Not specified",
-            joinDate: "Recent",
-            preferences: {
-              notifications: true,
-              emailUpdates: true,
-              language: "en",
-              darkMode: false,
-            },
-          });
+        const token = localStorage.getItem("token");
+        
+        if (!token) {
+          router.push("/auth");
           return;
         }
 
-        const userData = await getUserProfile(userId);
-        setUser({
-          ...userData.user,
-          // Add any missing fields that your frontend expects
-          organization: userData.user.associated_department || "Not specified",
-          joinDate: userData.user.createdAt
-            ? new Date(userData.user.createdAt).toLocaleDateString()
-            : "Recent",
-          preferences: {
-            notifications: true,
-            emailUpdates: true,
-            language: "en",
-            darkMode: false,
-          },
-        });
+        const storedUser = localStorage.getItem("user");
+        
+        if (!storedUser) {
+          router.push("/auth");
+          return;
+        }
+
+        const parsedUser = JSON.parse(storedUser);
+        
+        const userData = await getUserProfile(parsedUser.id);
+
+        if (userData.success) {
+          const transformedUser = {
+            ...userData.user,
+            organization: userData.user.associated_department || "Not specified",
+            joinDate: userData.user.createdAt
+              ? new Date(userData.user.createdAt).toLocaleDateString()
+              : "Recent",
+            preferences: userData.user.preferences || {
+              notifications: {
+                push: true,
+                email: true,
+                sms: false,
+                radius: 50
+              },
+              theme: {
+                mode: "system"
+              },
+              language: "en"
+            }
+          };
+          setUser(transformedUser);
+        } else {
+          throw new Error(userData.message || "Failed to fetch user profile");
+        }
       } catch (error) {
-        setError(error.message);
+        console.error("Profile fetch error:", error);
         toast({
           title: "Error",
           description: error.message,
           variant: "destructive",
         });
+        router.push("/auth");
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserProfile();
-  }, [toast]);
+  }, [toast, router]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -126,7 +200,13 @@ export default function Profile() {
         location: user.location,
       };
 
-      const userId = localStorage.getItem("userId");
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("User data not found");
+      }
+
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser.id;
 
       if (!userId) {
         throw new Error("User ID not found");
@@ -136,13 +216,13 @@ export default function Profile() {
 
       if (data.success) {
         const transformedUser = {
-          ...user, // Keep existing user data
-          ...data.user, // Merge new backend data
+          ...user,
+          ...data.user,
           organization: data.user.associated_department || "Not specified",
           joinDate: data.user.createdAt
             ? new Date(data.user.createdAt).toLocaleDateString()
             : "Recent",
-          preferences: user.preferences, // Preserve preferences
+          preferences: user.preferences,
         };
         setUser(transformedUser);
         localStorage.setItem("user", JSON.stringify(data.user));
@@ -157,58 +237,135 @@ export default function Profile() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error.message || "Failed to update profile. Please try again.",
+        description: error.message || "Failed to update profile. Please try again.",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("User data not found");
+      }
+
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser.id;
+
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/avatar`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      if (data.success) {
+        setUser(prev => ({
+          ...prev,
+          avatar: data.user.avatar,
+        }));
+        setAvatar(data.user.avatar);
+        toast({
+          title: "Avatar updated",
+          description: "Your profile picture has been successfully updated.",
+        });
+      } else {
+        throw new Error(data.message || "Failed to update avatar");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update avatar. Please try again.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
     try {
-      const userId = localStorage.getItem("userId");
-      const token = localStorage.getItem("authToken");
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("User data not found");
+      }
 
-      if (!userId || !token) {
-        toast({
-          title: "Error",
-          description: "User not authenticated. Please log in again.",
-          variant: "destructive",
-        });
-        router.push("/auth");
-        return;
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser.id;
+
+      if (!userId) {
+        throw new Error("User ID not found");
       }
 
       const response = await deleteUser(userId);
 
-      localStorage.clear();
-
-      toast({
-        title: "Account deleted",
-        description: "Your account has been permanently deleted.",
-        variant: "destructive",
-      });
-
-      router.push("/auth");
+      if (response.success) {
+        localStorage.clear();
+        toast({
+          title: "Account deleted",
+          description: "Your account has been permanently deleted.",
+          variant: "destructive",
+        });
+        router.push("/auth");
+      } else {
+        throw new Error(response.message || "Failed to delete account");
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description:
-          error.message || "Failed to delete account. Please try again.",
+        description: error.message || "Failed to delete account. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handlePreferenceChange = async (key, value) => {
+    try {
+      setLoading(true);
+      const updatedPreferences = {
+        ...user.preferences,
+        [key]: value,
+      };
+
+      const data = await updateUserPreferences(updatedPreferences);
+
+      if (data.success) {
+        setUser((prev) => ({
+          ...prev,
+          preferences: data.user.preferences,
+        }));
+        toast({
+          title: "Preferences updated",
+          description: "Your preferences have been successfully updated.",
+        });
+      } else {
+        throw new Error(data.message || "Failed to update preferences");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update preferences. Please try again.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -222,13 +379,12 @@ export default function Profile() {
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4">
-          {/* Profile Overview Card */}
           <Card>
             <CardHeader className="flex flex-row items-center space-x-4 pb-2">
               <div className="relative">
                 <Avatar className="h-20 w-20">
                   <AvatarImage
-                    src={avatar || "/placeholder-avatar.png"}
+                    src={user?.avatar ? `${API_BASE_URL}${user.avatar}` : "/placeholder-avatar.png"}
                     alt={user?.name}
                   />
                   <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
@@ -245,6 +401,7 @@ export default function Profile() {
                   className="hidden"
                   accept="image/*"
                   onChange={handleAvatarChange}
+                  disabled={loading}
                 />
               </div>
               <div className="space-y-1">
@@ -289,7 +446,6 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          {/* Edit Profile Form */}
           <Card>
             <CardHeader>
               <CardTitle>Edit Profile</CardTitle>
@@ -347,7 +503,7 @@ export default function Profile() {
                                 };
                                 setUser((prev) => ({
                                   ...prev,
-                                  location: locationData, // This matches your mongoose schema
+                                  location: locationData, 
                                 }));
                                 toast({
                                   title: "Location updated",
@@ -418,7 +574,13 @@ export default function Profile() {
                       Receive push notifications for important updates
                     </p>
                   </div>
-                  <Switch checked={user?.preferences?.notifications} />
+                  <Switch 
+                    checked={user?.preferences?.notifications?.push} 
+                    onCheckedChange={(checked) => handlePreferenceChange('notifications', {
+                      ...user.preferences.notifications,
+                      push: checked
+                    })}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -427,11 +589,67 @@ export default function Profile() {
                       Receive email notifications
                     </p>
                   </div>
-                  <Switch checked={user?.preferences?.emailUpdates} />
+                  <Switch 
+                    checked={user?.preferences?.notifications?.email} 
+                    onCheckedChange={(checked) => handlePreferenceChange('notifications', {
+                      ...user.preferences.notifications,
+                      email: checked
+                    })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>SMS Updates</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive SMS notifications
+                    </p>
+                  </div>
+                  <Switch 
+                    checked={user?.preferences?.notifications?.sms} 
+                    onCheckedChange={(checked) => handlePreferenceChange('notifications', {
+                      ...user.preferences.notifications,
+                      sms: checked
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Notification Radius (km)</Label>
+                  <Input
+                    type="number"
+                    value={user?.preferences?.notifications?.radius || 50}
+                    onChange={(e) => handlePreferenceChange('notifications', {
+                      ...user.preferences.notifications,
+                      radius: parseInt(e.target.value)
+                    })}
+                    min="1"
+                    max="100"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Theme Mode</Label>
+                  <Select 
+                    value={user?.preferences?.theme?.mode || "system"} 
+                    onValueChange={(value) => handlePreferenceChange('theme', {
+                      ...user.preferences.theme,
+                      mode: value
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select theme mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="system">System</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Language</Label>
-                  <Select defaultValue={user?.preferences?.language}>
+                  <Select 
+                    value={user?.preferences?.language || "en"} 
+                    onValueChange={(value) => handlePreferenceChange('language', value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
@@ -457,41 +675,58 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <Button  
+                <Button
                   variant="outline"
                   onClick={() => setIsChangePasswordOpen(true)}
-                  className="w-full">
-                    Change Password
-                  </Button>
-                  {isChangePassword && (
-                    <ChangePassword onClose={() => setIsChangePasswordOpen(false)} />
-                  )}
+                  className="w-full h-12 text-base hover:bg-primary/5 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="mr-2"
+                  >
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                  </svg>
+                  Change Password
+                </Button>
+                <ChangePassword
+                  open={isChangePassword}
+                  onClose={() => setIsChangePasswordOpen(false)}
+                />
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="destructive"
-                      className="w-full justify-start"
+                      className="w-full h-12 text-base hover:bg-destructive/90 transition-colors"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
+                      <Trash2 className="mr-2 h-5 w-5" />
                       Delete Account
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>
+                      <AlertDialogTitle className="text-xl font-bold">
                         Are you absolutely sure?
                       </AlertDialogTitle>
-                      <AlertDialogDescription>
+                      <AlertDialogDescription className="text-base">
                         This action cannot be undone. This will permanently
                         delete your account and remove your data from our
                         servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel className="h-10 px-4">Cancel</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={handleDeleteAccount}
-                        className="bg-destructive"
+                        className="bg-destructive hover:bg-destructive/90 h-10 px-4"
                       >
                         Delete Account
                       </AlertDialogAction>

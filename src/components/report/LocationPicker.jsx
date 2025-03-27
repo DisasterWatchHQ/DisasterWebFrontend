@@ -10,7 +10,6 @@ const LocationPicker = ({ onChange, defaultLocation }) => {
   
   const defaultCenter = { lat: 0, lng: 0 };
   
-  // Initialize map after Google Maps script loads
   useEffect(() => {
     if (!isGoogleLoaded || !window.google) return;
     
@@ -28,7 +27,6 @@ const LocationPicker = ({ onChange, defaultLocation }) => {
       mapInstance.addListener('click', handleMapClick);
       setMap(mapInstance);
       
-      // If there's a default location, set marker there
       if (defaultLocation?.latitude && defaultLocation?.longitude) {
         const position = { 
           lat: defaultLocation.latitude, 
@@ -44,7 +42,6 @@ const LocationPicker = ({ onChange, defaultLocation }) => {
         setMarker(newMarker);
         mapInstance.setCenter(position);
         
-        // Add drag listener
         newMarker.addListener('dragend', () => {
           const pos = newMarker.getPosition();
           onChange({
@@ -58,17 +55,14 @@ const LocationPicker = ({ onChange, defaultLocation }) => {
     }
   }, [isGoogleLoaded, defaultLocation]);
   
-  // Handle map clicks
   const handleMapClick = (event) => {
     const lat = event.latLng.lat();
     const lng = event.latLng.lng();
     
-    // Remove existing marker
     if (marker) {
       marker.setMap(null);
     }
     
-    // Create new marker
     const newMarker = new window.google.maps.Marker({
       position: { lat, lng },
       map,
@@ -77,7 +71,6 @@ const LocationPicker = ({ onChange, defaultLocation }) => {
     
     setMarker(newMarker);
     
-    // Add drag listener
     newMarker.addListener('dragend', () => {
       const pos = newMarker.getPosition();
       onChange({
@@ -86,7 +79,6 @@ const LocationPicker = ({ onChange, defaultLocation }) => {
       });
     });
     
-    // Trigger change
     onChange({ latitude: lat, longitude: lng });
   };
 

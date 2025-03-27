@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { loginUser } from "@/api/auth/auth";
 import { toast } from "sonner";
-import { useUser } from "@/provider/UserContext";  // Import useUser hook instead of UserProvider
+import { useUser } from "@/provider/UserContext";
 
 export function SignInForm() {
   const router = useRouter();
-  const { login } = useUser();  // Get login function from context
+  const { login } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,21 +27,14 @@ export function SignInForm() {
     try {
       const response = await loginUser({
         email,
-        password
+        password,
       });
-      
-      // Use the login function from context
+
       login(response.user, response.token);
-      
       toast.success("Successfully signed in!");
-      
-      // Clear form
       setEmail("");
       setPassword("");
-      
-      // Redirect to dashboard
-      router.push('/dashboard');
-      
+      router.push("/dashboard");
     } catch (err) {
       toast.error(err.message || "Failed to sign in");
     } finally {

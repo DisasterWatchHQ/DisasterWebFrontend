@@ -33,48 +33,53 @@ export function SignUpForm({ onSignUpSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       setIsLoading(false);
       return;
     }
-  
+
     if (!name || !email || !password || !workId || !associatedDepartment) {
       toast.error("All fields are required");
       setIsLoading(false);
       return;
     }
-  
+
     try {
       const userData = {
         name,
         email,
         password,
         workId,
-        associated_department: associatedDepartment,
+        associatedDepartment,
       };
-  
-      console.log("Payload being sent:", userData); // Debugging
       const response = await createUser(userData);
-  
-      toast.success("Registration successful! You can now sign in.");
-      onSignUpSuccess && onSignUpSuccess();
-  
-      // Clear form
-      setName("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setWorkId("");
-      setAssociatedDepartment("");
+
+      if (response.success) {
+        toast.success("Registration successful! You can now sign in.");
+        onSignUpSuccess && onSignUpSuccess();
+
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setWorkId("");
+        setAssociatedDepartment("");
+      } else {
+        throw new Error(response.message || "Registration failed");
+      }
     } catch (err) {
-      console.error("Error details:", err);
-      toast.error(
-        err.response?.data?.message ||
-        err.message ||
-        "An unexpected error occurred"
-      );
+      console.error("Registration error:", err);
+      
+      let errorMessage = "An unexpected error occurred";
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

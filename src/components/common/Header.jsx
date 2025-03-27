@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import * as React from "react";
 import Link from "next/link";
@@ -14,15 +14,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Sun, Moon } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // ShadCN's Avatar
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
-import { useUser } from "@/provider/UserContext"; // Importing the context
+import { useUser } from "@/provider/UserContext";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"; // ShadCN dropdown
+} from "@/components/ui/dropdown-menu";
+import { NotificationToggle } from "@/components/NotificationToggle";
 
 const routes = [
   { href: "/map", label: "Map" },
@@ -64,13 +65,14 @@ const privateLinks = [
     label: "Resources",
     dropdown: [
       { href: "/dashboard/resources/guides", label: "Guides" },
-      { href: "/dashboard/resources/emergency-contacts", label: "Emergency Contacts" },
+      {
+        href: "/dashboard/resources/emergency-contacts",
+        label: "Emergency Contacts",
+      },
       { href: "/dashboard/resources/facilities", label: "Facilities" },
     ],
   },
 ];
-
-
 
 export default function Header() {
   const pathname = usePathname();
@@ -147,7 +149,6 @@ export default function Header() {
           </NavigationMenu>
         </div>
 
-        {/* Mobile Menu */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -200,41 +201,43 @@ export default function Header() {
           </SheetContent>
         </Sheet>
 
-        {/* Right Side */}
-        <div className="flex items-center justify-end ml-auto space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="h-9 w-9"
-          >
-            {theme === "light" ? (
-              <Moon className="h-4 w-4" />
-            ) : (
-              <Sun className="h-4 w-4" />
-            )}
-          </Button>
+        <div className="flex items-center gap-2">
+          <NotificationToggle />
+          <div className="flex items-center justify-end ml-auto space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-9 w-9"
+            >
+              {theme === "light" ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+            </Button>
 
-          {isLoggedIn ? (
-            <>
-              <Avatar>
-                <AvatarImage src={user.avatar || "/placeholder-avatar.png"} />
-                <AvatarFallback>
-                  {user.name ? user.name.charAt(0) : "U"}
-                </AvatarFallback>
-              </Avatar>
-              <Link href="/profile">
-                <Button variant="ghost">Profile</Button>
+            {isLoggedIn ? (
+              <>
+                <Avatar>
+                  <AvatarImage src={user.avatar || "/placeholder-avatar.png"} />
+                  <AvatarFallback>
+                    {user.name ? user.name.charAt(0) : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <Link href="/profile">
+                  <Button variant="ghost">Profile</Button>
+                </Link>
+                <Link href="/auth" onClick={handleLogout}>
+                  <Button variant="destructive">Logout</Button>
+                </Link>
+              </>
+            ) : (
+              <Link href="/auth">
+                <Button>Login</Button>
               </Link>
-              <Link href="/auth" onClick={handleLogout}>
-                <Button variant="destructive">Logout</Button>
-              </Link>
-            </>
-          ) : (
-            <Link href="/auth">
-              <Button>Login</Button>
-            </Link>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </header>

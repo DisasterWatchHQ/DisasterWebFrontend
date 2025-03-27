@@ -1,11 +1,9 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
 import {
@@ -33,8 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { resourceApi } from "@/lib/resourceApi";
 
 export default function FacilitiesPage() {
   const { toast } = useToast();
@@ -71,7 +68,6 @@ export default function FacilitiesPage() {
     metadata: {
       capacity: 0,
     },
-    // Add capacity at the root level for shelter type
     capacity: 0,
     operating_hours: {
       monday: { open: "09:00", close: "17:00", is24Hours: false },
@@ -97,17 +93,14 @@ export default function FacilitiesPage() {
 
   const fetchFacilities = async () => {
     try {
-      const queryParams = new URLSearchParams();
-      if (filters.type !== "all") queryParams.append("type", filters.type);
-      if (filters.city) queryParams.append("city", filters.city);
+      const params = {};
+      if (filters.type !== "all") params.type = filters.type;
+      if (filters.city) params.city = filters.city;
       if (filters.availability_status !== "all") {
-        queryParams.append("availability_status", filters.availability_status);
+        params.availability_status = filters.availability_status;
       }
 
-      const response = await fetch(
-        `http://localhost:5000/api/resources/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`,
-      );
-      const data = await response.json();
+      const data = await resourceApi.public.getFacilities(params);
       setFacilities(data.resources);
     } catch (error) {
       toast({
@@ -150,7 +143,6 @@ export default function FacilitiesPage() {
           coordinates: [longitude, latitude],
           address: formData.location.address,
         },
-        // Set capacity in the proper location
         capacity:
           formData.type === "shelter"
             ? Number(formData.metadata.capacity)
@@ -164,34 +156,30 @@ export default function FacilitiesPage() {
         },
       };
 
-      const url = editingFacility
-        ? `http://localhost:5000/api/resources/${editingFacility.id}`
-        : "http://localhost:5000/api/resources/";
-
-      const method = editingFacility ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (response.ok) {
+      if (editingFacility) {
+        await resourceApi.protected.updateResource(
+          editingFacility.id,
+          requestBody,
+        );
         toast({
           title: "Success",
-          description: `Facility ${editingFacility ? "updated" : "created"} successfully`,
+          description: "Facility updated successfully",
         });
-        setIsDialogOpen(false);
-        resetForm();
-        fetchFacilities();
+      } else {
+        await resourceApi.protected.createResource(requestBody);
+        toast({
+          title: "Success",
+          description: "Facility created successfully",
+        });
       }
+
+      setIsDialogOpen(false);
+      resetForm();
+      fetchFacilities();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
     }
@@ -199,28 +187,17 @@ export default function FacilitiesPage() {
 
   const handleDelete = async (facilityId) => {
     try {
-      const response = await fetch(
-        `http://localhost:5000/api/resources/${facilityId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      await resourceApi.protected.deleteResource(facilityId);
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Facility deleted successfully",
-        });
-        fetchFacilities();
-      }
+      toast({
+        title: "Success",
+        description: "Facility deleted successfully",
+      });
+      fetchFacilities();
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to delete facility",
         variant: "destructive",
       });
     }

@@ -1,11 +1,9 @@
 "use client";
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2 } from "lucide-react";
-import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -26,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { reportApi } from "@/lib/reportApi";
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
@@ -74,17 +73,7 @@ export default function ReportPage() {
     try {
       setIsSubmitting(true);
 
-      const response = await fetch("http://localhost:5000/api/userReport", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit report");
-      }
+      const response = await reportApi.submitReport(data);
 
       toast({
         title: "Success",
@@ -95,7 +84,9 @@ export default function ReportPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to submit report. Please try again.",
+        description:
+          error.response?.data?.error ||
+          "Failed to submit report. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -131,7 +122,10 @@ export default function ReportPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Disaster Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select disaster type" />

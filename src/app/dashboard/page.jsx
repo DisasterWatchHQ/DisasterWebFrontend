@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import api from "@/api/user/dash";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,9 +26,11 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import axios from 'axios';
 import { WarningActions } from "@/components/warning/WarningActions";
-import CreateWarningDialog  from "@/components/report/CreateWarningDialog";
+import CreateWarningDialog from "@/components/report/CreateWarningDialog";
+import { warningApi } from "@/lib/warningApi";
+import { reportApi } from "@/lib/reportApi";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
   const [dashboardStats, setDashboardStats] = useState({
@@ -51,94 +52,61 @@ const AdminDashboard = () => {
     bySeverity: [],
     recentTrends: [],
   });
-
+  const { toast } = useToast();
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
-
-  const fetchDashboardStats = async () => {
-    try {
-      const response = await api.get("/userReport/stats/verification");
-      setDashboardStats({
-        pendingCount: response.data.pendingCount,
-        verifiedToday: response.data.verifiedToday,
-        activeIncidents: response.data.activeIncidents,
-        avgVerificationTime: Math.round(response.data.avgVerificationTime),
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
-    }
-  };
 
   const fetchActiveWarnings = async () => {
     try {
-      const response = await api.get("/warning/active");
-      setActiveWarnings(response.data.data);
+      const response = await warningApi.public.getActiveWarnings();
+      setActiveWarnings(response.data);
     } catch (error) {
       console.error("Error fetching active warnings:", error);
     }
   };
-  
+
   const fetchPendingReports = async () => {
     try {
-      const response = await api.get("/userReport/public", {
-        params: {
-          verification_status: "pending",
-          limit: 5,
-        },
+      const response = await reportApi.public.getFeedReports({
+        verification_status: "pending",
+        limit: 5,
       });
 
-      const formattedReports = response.data.reports.map((report) => ({
-        title: report.title,
-        id: report.id,
-        type: report.disaster_category,
-        location: `${report.location.address.district}, ${report.location.address.city}`,
-        timestamp: new Date(report.date_time).toLocaleString(),
-        urgency: report.verification?.severity || "Medium",
-      }));
+      if (!response.data?.reports) {
+        console.error("Unexpected response format:", response);
+        return;
+      }
+
+      const formattedReports = response.data.reports
+        .filter((report) => report.verification_status === "pending")
+        .map((report) => ({
+          title: report.title,
+          id: report.id || report._id,
+          type: report.disaster_category,
+          location: `${report.location.address.district}, ${report.location.address.city}`,
+          timestamp: new Date(report.date_time).toLocaleString(),
+          urgency: report.verification?.severity || "Medium",
+          verification_status: report.verification_status,
+        }));
 
       setPendingReports(formattedReports);
     } catch (error) {
       console.error("Error fetching pending reports:", error);
-    }
-  };
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await api.get("/userReport/stats/analytics");
-
-      // Format weekly trends data
-      const trends = response.data.weeklyTrends.reduce((acc, curr) => {
-        const date = curr._id.date;
-        if (!acc[date]) {
-          acc[date] = { date };
-        }
-        acc[date][curr._id.status] = curr.count;
-        return acc;
-      }, {});
-
-      setAnalyticsData({
-        weeklyTrends: Object.values(trends),
-        reportTypes: response.data.reportTypes.map((type) => ({
-          name: type._id,
-          value: type.count,
-        })),
-        responseTime: response.data.responseTime.map((time) => ({
-          time: `${Math.round(time.avgTime)}h`,
-          count: time.count,
-        })),
+      toast({
+        title: "Error",
+        description: "Failed to fetch pending reports",
+        variant: "destructive",
       });
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
     }
   };
 
   const fetchVerificationStats = async () => {
     try {
-      const response = await api.get("/userReport/stats/verification");
+      const response = await reportApi.protected.getVerificationStats();
       setDashboardStats({
-        pendingCount: response.data.pendingCount,
-        verifiedToday: response.data.verifiedToday,
-        activeIncidents: response.data.activeIncidents,
-        avgVerificationTime: Math.round(response.data.avgVerificationTime),
+        pendingCount: response.pendingCount,
+        verifiedToday: response.verifiedToday,
+        activeIncidents: response.activeIncidents,
+        avgVerificationTime: Math.round(response.avgVerificationTime),
       });
     } catch (error) {
       console.error("Error fetching verification stats:", error);
@@ -147,8 +115,8 @@ const AdminDashboard = () => {
 
   const fetchReportStats = async () => {
     try {
-      const response = await api.get("/userReport/stats");
-      setReportStats(response.data);
+      const response = await reportApi.protected.getReportStats();
+      setReportStats(response);
     } catch (error) {
       console.error("Error fetching report stats:", error);
     }
@@ -156,32 +124,29 @@ const AdminDashboard = () => {
 
   const fetchReportAnalytics = async () => {
     try {
-      const response = await api.get("/userReport/stats/analytics");
-      
-      // Ensure reportTypes has the correct structure
-      const reportTypes = response.data.reportTypes.map(type => ({
+      const response = await reportApi.protected.getReportAnalytics();
+
+      const reportTypes = response.reportTypes.map((type) => ({
         name: type.name || "Unknown",
-        value: type.value || 0
+        value: type.value || 0,
       }));
-  
-      // Format weekly trends data
-      const formattedTrends = response.data.weeklyTrends.map(trend => ({
+
+      const formattedTrends = response.weeklyTrends.map((trend) => ({
         date: trend.date,
         verified: trend.verified || 0,
         pending: trend.pending || 0,
-        dismissed: trend.dismissed || 0
+        dismissed: trend.dismissed || 0,
       }));
-  
-      // Format response time data
-      const responseTime = response.data.responseTime.map(item => ({
+
+      const responseTime = response.responseTime.map((item) => ({
         time: item.time,
-        count: item.count
+        count: item.count,
       }));
-  
+
       setAnalyticsData({
         weeklyTrends: formattedTrends,
         reportTypes: reportTypes,
-        responseTime: responseTime
+        responseTime: responseTime,
       });
     } catch (error) {
       console.error("Error fetching report analytics:", error);
@@ -207,52 +172,55 @@ const AdminDashboard = () => {
 
   const handleReportAction = async (reportId, action) => {
     try {
+      setPendingReports((current) =>
+        current.filter((report) => report.id !== reportId),
+      );
+
       if (action === "verify") {
-        await api.post(`/userReport/${reportId}/verify`, {
+        await reportApi.protected.verifyReport(reportId, {
           severity: "medium",
           notes: "Verified through dashboard",
         });
-      } else {
-        await api.post(`/userReport/${reportId}/dismiss`, {
+      } else if (action === "dismiss") {
+        await reportApi.protected.dismissReport(reportId, {
           notes: "Dismissed through dashboard",
         });
       }
-      fetchPendingReports(); // Refresh the list after action
+
+      await Promise.all([
+        fetchPendingReports(),
+        fetchVerificationStats(),
+        fetchReportStats(),
+        fetchReportAnalytics(),
+      ]);
+
+      toast({
+        title: "Success",
+        description: `Report successfully ${action === "verify" ? "verified" : "dismissed"}.`,
+      });
     } catch (error) {
       console.error(`Error ${action}ing report:`, error);
+
+      await Promise.all([
+        fetchPendingReports(),
+        fetchVerificationStats(),
+        fetchReportStats(),
+        fetchReportAnalytics(),
+      ]);
+
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.error || `Failed to ${action} report.`,
+        variant: "destructive",
+      });
     }
   };
 
-  const reportTrends = [
-    { date: "01/02", verified: 15, pending: 8, rejected: 2 },
-    { date: "01/03", verified: 12, pending: 10, rejected: 3 },
-    { date: "01/04", verified: 20, pending: 5, rejected: 1 },
-    { date: "01/05", verified: 18, pending: 7, rejected: 4 },
-    { date: "01/06", verified: 25, pending: 12, rejected: 2 },
-    { date: "01/07", verified: 22, pending: 9, rejected: 3 },
-    { date: "01/08", verified: 16, pending: 11, rejected: 2 },
-  ];
-
-  const reportTypes = [
-    { name: "Floods", value: 35 },
-    { name: "Fire", value: 25 },
-    { name: "Infrastructure", value: 20 },
-    { name: "Weather", value: 15 },
-    { name: "Others", value: 5 },
-  ];
-
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
-
-  const responseTimeData = [
-    { time: "<1h", count: 45 },
-    { time: "1-2h", count: 30 },
-    { time: "2-4h", count: 15 },
-    { time: ">4h", count: 10 },
-  ];
 
   return (
     <div className="p-6 space-y-6">
-      {/* Top Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -311,7 +279,6 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Pending Reports Table */}
       <Card>
         <CardHeader>
           <CardTitle>Reports Awaiting Verification</CardTitle>
@@ -359,10 +326,25 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      <CardTitle>Create Warnings!</CardTitle>
+      <div className="flex justify-between items-center">
+        <CardTitle>Warnings Management</CardTitle>
+        <Button
+          onClick={() => setIsWarningDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Create Warning
+        </Button>
+      </div>
+
       <CreateWarningDialog
         open={isWarningDialogOpen}
-        onOpenChange={setIsWarningDialogOpen}
+        onOpenChange={(open) => {
+          setIsWarningDialogOpen(open);
+          if (!open) {
+            fetchActiveWarnings();
+          }
+        }}
       />
       <Card>
         <CardHeader>
@@ -370,32 +352,40 @@ const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {activeWarnings.map((warning) => (
-              <div
-                key={warning._id}
-                className="flex items-center justify-between p-4 border rounded"
-              >
-                <div className="space-y-1">
-                  <div className="font-medium">{warning.title}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {warning.disaster_category} - Severity: {warning.severity}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Created: {new Date(warning.created_at).toLocaleString()}
-                  </div>
-                  {warning.updates.length > 0 && (
+            {Array.isArray(activeWarnings) && activeWarnings.length > 0 ? (
+              activeWarnings.map((warning) => (
+                <div
+                  key={warning.id || warning._id}
+                  className="flex items-center justify-between p-4 border rounded"
+                >
+                  <div className="space-y-1">
+                    <div className="font-medium">{warning.title}</div>
                     <div className="text-sm text-muted-foreground">
-                      Last update: {warning.updates[warning.updates.length - 1].update_text}
+                      {warning.disaster_category} - Severity: {warning.severity}
                     </div>
-                  )}
+                    <div className="text-sm text-muted-foreground">
+                      Created:{" "}
+                      {new Date(
+                        warning.createdAt || warning.created_at,
+                      ).toLocaleString()}
+                    </div>
+                    {warning.updates?.length > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        Last update:{" "}
+                        {
+                          warning.updates[warning.updates.length - 1]
+                            .update_text
+                        }
+                      </div>
+                    )}
+                  </div>
+                  <WarningActions
+                    warning={warning}
+                    onUpdate={() => fetchActiveWarnings()}
+                  />
                 </div>
-                <WarningActions
-                  warning={warning}
-                  onUpdate={() => fetchActiveWarnings()}
-                />
-              </div>
-            ))}
-            {activeWarnings.length === 0 && (
+              ))
+            ) : (
               <div className="text-center py-4 text-muted-foreground">
                 No active warnings
               </div>
@@ -403,8 +393,7 @@ const AdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
-      
-      {/* Analytics Section */}
+
       <Tabs defaultValue="trends" className="space-y-4">
         <TabsList>
           <TabsTrigger value="trends">Report Trends</TabsTrigger>
