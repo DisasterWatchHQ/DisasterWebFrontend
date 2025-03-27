@@ -44,7 +44,7 @@ import { useRouter } from "next/navigation";
 import { ChangePassword } from "@/components/common/ChangePassword";
 
 const API_BASE_URL =
-  process.env.NEXT_PRIVATE_API_URL;
+  process.env.NEXT_PUBLIC_API_URL;
 
 const getUserProfile = async (userId) => {
   try {
