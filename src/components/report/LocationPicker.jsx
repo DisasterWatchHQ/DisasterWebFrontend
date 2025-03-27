@@ -85,7 +85,7 @@ const LocationPicker = ({ onChange, defaultLocation }) => {
   return (
     <div className="space-y-2">
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PRIVATE_GOOGLE_MAPS_API_KEY}`}
         onLoad={() => setIsGoogleLoaded(true)}
       />
       
