@@ -183,7 +183,7 @@ export function NotificationProvider({ children }) {
     }
 
     try {
-      const response = await fetch("/api/notifications/send", {
+      const response = await fetch("/notifications/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

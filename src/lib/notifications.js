@@ -1,4 +1,3 @@
-// Notification utility functions
 export const checkNotificationPermission = async () => {
   if (!("Notification" in window)) {
     throw new Error("This browser does not support notifications");
@@ -28,7 +27,6 @@ export const subscribeToPushNotifications = async (registration) => {
       throw new Error("VAPID public key is not configured");
     }
 
-    // Check for existing subscription first
     const existingSubscription = await registration.pushManager.getSubscription();
     if (existingSubscription) {
       return existingSubscription;
@@ -82,7 +80,7 @@ export const unsubscribeFromPushNotifications = async (registration) => {
 
     const subscription = await registration.pushManager.getSubscription();
     if (!subscription) {
-      return; // Already unsubscribed
+      return; 
     }
 
     const token = localStorage.getItem("token");
@@ -90,7 +88,6 @@ export const unsubscribeFromPushNotifications = async (registration) => {
       throw new Error("User must be logged in to unsubscribe from notifications");
     }
 
-    // Unsubscribe from backend first
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/notifications/web/unsubscribe`,
       {
@@ -110,7 +107,6 @@ export const unsubscribeFromPushNotifications = async (registration) => {
       throw new Error(error.message || "Failed to unsubscribe from notifications");
     }
 
-    // Then unsubscribe locally
     await subscription.unsubscribe();
   } catch (error) {
     console.error("Error unsubscribing from push notifications:", error);
