@@ -1,5 +1,5 @@
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 import Header from "../components/common/Header";
 import LayoutWrapper from "@/components/common/LayoutWrapper";
@@ -7,16 +7,6 @@ import Footer from "@/components/common/Footer";
 import { ThemeProvider } from "next-themes";
 import { UserProvider } from "@/provider/UserContext";
 import { Toaster } from "@/components/ui/toaster";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata = {
   title: "Create Next App",
@@ -26,12 +16,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const header = <Header />;
   const footer = <Footer />;
-
+  
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
-      >
+    <html 
+      lang="en" 
+      className={`${GeistSans.className} ${GeistMono.className}`}
+    >
+      <body className="antialiased flex flex-col min-h-screen">
         <UserProvider>
           <ThemeProvider
             attribute="class"
