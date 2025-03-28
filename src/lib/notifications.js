@@ -44,8 +44,9 @@ export const subscribeToPushNotifications = async (registration) => {
       throw new Error("User must be logged in to subscribe to notifications");
     }
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://disastercatcher.onrender.com/api";
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/notifications/web/subscribe`,
+      `${API_URL}/notifications/web/subscribe`,
       {
         method: "POST",
         headers: {
@@ -89,7 +90,7 @@ export const unsubscribeFromPushNotifications = async (registration) => {
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/notifications/web/unsubscribe`,
+      `${API_URL}/notifications/web/unsubscribe`,
       {
         method: "POST",
         headers: {
