@@ -47,7 +47,7 @@ const containerStyle = {
 
 export default function Map() {
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    googleMapsApiKey: process.env.NEXT_PRIVATE_GOOGLE_MAPS_API_KEY || '',
     libraries,
   });
 

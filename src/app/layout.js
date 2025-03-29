@@ -1,4 +1,5 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import "./globals.css";
 import Header from "../components/common/Header";
 import LayoutWrapper from "@/components/common/LayoutWrapper";
@@ -10,16 +11,6 @@ import { Suspense } from "react";
 import Loading from "@/components/Loading";
 import { NotificationProvider } from "@/provider/NotificationProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata = {
   title: "Disaster Web App",
   description: "Real-time disaster monitoring and notification system",
@@ -28,12 +19,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const header = <Header />;
   const footer = <Footer />;
-
+  
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
-      >
+    <html 
+      lang="en" 
+      className={`${GeistSans.className} ${GeistMono.className}`}
+    >
+      <body className="antialiased flex flex-col min-h-screen">
         <UserProvider>
           <NotificationProvider>
             <ThemeProvider

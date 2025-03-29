@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', process.env.NEXT_PUBLIC_API_URL?.replace(/^https?:\/\//, '')],
+    domains: ['localhost', process.env.NEXT_PRIVATE_API_URL 
+      ? process.env.NEXT_PRIVATE_API_URL.replace(/^https?:\/\//, '') 
+      : undefined
+    ].filter(Boolean),
     remotePatterns: [
       {
         protocol: 'http',
@@ -9,12 +12,14 @@ const nextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
-      {
-        protocol: 'https',
-        hostname: process.env.NEXT_PUBLIC_API_URL?.replace(/^https?:\/\//, ''),
-        pathname: '/uploads/**',
-      },
-    ],
+      process.env.NEXT_PUBLIC_API_URL 
+      ? {
+          protocol: 'https',
+          hostname: process.env.NEXT_PRIVATE_API_URL.replace(/^https?:\/\//, ''),
+          pathname: '/uploads/**',
+        }
+      : null
+    ].filter(Boolean),
   },
   // Enable production optimizations
   compress: true,

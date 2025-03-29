@@ -244,7 +244,6 @@ export const MapPicker = ({ onLocationSelect }) => {
           }
         });
 
-        // Fallbacks if components weren't found
         if (!address.city) address.city = address.district;
         if (!address.district) address.district = address.province;
 
@@ -260,7 +259,7 @@ export const MapPicker = ({ onLocationSelect }) => {
   return (
     <div className="space-y-2">
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PRIVATE_GOOGLE_MAPS_API_KEY}&libraries=places`}
         onLoad={handleScriptLoad}
       />
       <div id="picker-map" className="h-64 w-full rounded-md border" />
