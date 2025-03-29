@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Sun, Moon } from "lucide-react";
+import { Menu, Sun, Moon, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { useUser } from "@/provider/UserContext";
@@ -165,23 +165,29 @@ export default function Header() {
               >
                 DisasterWatch
               </Link>
-              {routes.map((route) =>
+              {currentLinks.map((route) =>
                 route.dropdown ? (
                   <div key={route.href} className="space-y-2">
-                    <span className="text-lg font-semibold">{route.label}</span>
-                    {route.dropdown.map((subRoute) => (
-                      <Link
-                        key={subRoute.href}
-                        href={subRoute.href}
-                        className={cn(
-                          "text-sm font-medium transition-colors hover:text-primary",
-                          pathname === subRoute.href && "text-primary",
-                        )}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {subRoute.label}
-                      </Link>
-                    ))}
+                    <div className="flex items-center">
+                      <span className="text-lg font-semibold">{route.label}</span>
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </div>
+                    <div className="ml-4 flex flex-col space-y-2 border-l-2 border-primary/20 pl-2">
+                      {route.dropdown.map((subRoute) => (
+                        <Link
+                          key={subRoute.href}
+                          href={subRoute.href}
+                          className={cn(
+                            "text-sm font-medium transition-colors hover:text-primary flex items-center",
+                            pathname === subRoute.href && "text-primary font-semibold",
+                          )}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <div className="h-2 w-2 rounded-full bg-primary/60 mr-2" />
+                          {subRoute.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <Link
@@ -189,7 +195,7 @@ export default function Header() {
                     href={route.href}
                     className={cn(
                       "text-sm font-medium transition-colors hover:text-primary",
-                      pathname === route.href && "text-primary",
+                      pathname === route.href && "text-primary font-semibold",
                     )}
                     onClick={() => setIsOpen(false)}
                   >
