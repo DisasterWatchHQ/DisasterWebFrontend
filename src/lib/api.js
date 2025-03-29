@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  process.env.NEXT_PUBLIC_API_URL || "https://disastercatcher.onrender.com/api";
 
 const publicClient = axios.create({
   baseURL: API_BASE_URL,

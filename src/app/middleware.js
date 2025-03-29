@@ -8,7 +8,7 @@ export function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // Force HTTPS in production
-  if (process.env.NEXT_PUBLIC_ENABLE_HTTPS === 'true' && !request.nextUrl.protocol.includes('https')) {
+  if (process.env.NEXT_PRIVATE_ENABLE_HTTPS === 'true' && !request.nextUrl.protocol.includes('https')) {
     return NextResponse.redirect(`https://${request.nextUrl.host}${request.nextUrl.pathname}`);
   }
 
