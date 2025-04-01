@@ -233,11 +233,11 @@ export default function GuidesPage() {
       const updatedGuide = await resourceApi.public.getResourceById(
         guide.id || guide._id,
       );
-      setEditingGuide(updatedGuide.data);
+      setEditingGuide(updatedGuide);
       setFormData({
-        ...updatedGuide.data,
+        ...updatedGuide,
         metadata: {
-          ...updatedGuide.data.metadata,
+          ...updatedGuide.metadata,
           lastUpdated: new Date().toISOString(),
         },
       });
@@ -260,7 +260,7 @@ export default function GuidesPage() {
       const updatedGuide = await resourceApi.public.getResourceById(
         guide.id || guide._id,
       );
-      setSelectedGuide(updatedGuide.data);
+      setSelectedGuide(updatedGuide);
     } catch (error) {
       toast({
         title: "Error",
