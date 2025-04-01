@@ -287,7 +287,7 @@ export default function GuidesPage() {
           <DialogHeader>
             <DialogTitle>{guide.name}</DialogTitle>
             <div className="flex gap-2 mt-2">
-              {guide.tags.map((tag) => (
+              {(guide.tags || []).map((tag) => (
                 <Badge key={tag} variant="secondary">
                   {tag}
                 </Badge>
@@ -526,13 +526,12 @@ export default function GuidesPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {guide.tags &&
-                    guide.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
+                <div className="flex gap-2 mt-2">
+                  {(guide.tags || []).map((tag) => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
               </CardHeader>
               <CardContent>
