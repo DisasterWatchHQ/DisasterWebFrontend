@@ -132,14 +132,6 @@ export default function EmergencyContactsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token) {
-      toast({
-        title: "Error",
-        description: "Please login to perform this action",
-        variant: "destructive",
-      });
-      return;
-    }
   
     if (!validateForm()) return;
   
@@ -175,14 +167,6 @@ export default function EmergencyContactsPage() {
   };
 
   const handleDelete = async (contactId) => {
-    if (!token) {
-      toast({
-        title: "Error",
-        description: "Please login to delete contacts",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setIsLoading(true);
     try {
