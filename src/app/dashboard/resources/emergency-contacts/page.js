@@ -60,18 +60,66 @@ export default function EmergencyContactsPage() {
   useEffect(() => {
     fetchContacts();
   }, []);
-
-  const fetchContacts = async () => {
-    try {
-      setIsLoading(true);
-      const data = await resourceApi.public.getEmergencyContacts();
-      setContacts(data.resources);
-    } catch (error) {
+  
+  const validateForm = () => {
+    if (!formData.name.trim()) {
       toast({
-        title: "Error",
-        description: "Failed to fetch emergency contacts",
+        title: "Validation Error",
+        description: "Contact name is required",
         variant: "destructive",
       });
+      return false;
+    }
+  
+    if (!formData.contact.phone.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Phone number is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+  
+    if (!validatePhoneNumber(formData.contact.phone)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid phone number",
+        variant: "destructive",
+      });
+      return false;
+    }
+  
+    if (formData.contact.email && !validateEmail(formData.contact.email)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return false;
+    }
+  
+    return true;
+  };
+  
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const fetchContacts = async () => {
+    setIsLoading(true);
+    try {
+      const response = await resourceApi.public.getEmergencyContacts();
+      if (!response?.resources) throw new Error("Invalid response format");
+      setContacts(response.resources);
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch emergency contacts",
+        variant: "destructive",
+      });
+      setContacts([]);
     } finally {
       setIsLoading(false);
     }
@@ -84,25 +132,21 @@ export default function EmergencyContactsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validatePhoneNumber(formData.contact.phone)) {
+    if (!token) {
       toast({
-        title: "Invalid Phone Number",
-        description:
-          "Please enter a valid phone number using only digits, spaces, parentheses, plus sign, and hyphens",
+        title: "Error",
+        description: "Please login to perform this action",
         variant: "destructive",
       });
       return;
     }
-
+  
+    if (!validateForm()) return;
+  
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
       if (editingContact) {
-        await resourceApi.protected.updateResource(
-          editingContact._id,
-          formData,
-        );
+        await resourceApi.protected.updateResource(editingContact._id, formData);
         toast({
           title: "Success",
           description: "Emergency contact updated successfully",
@@ -114,15 +158,15 @@ export default function EmergencyContactsPage() {
           description: "Emergency contact created successfully",
         });
       }
-
+  
       setIsDialogOpen(false);
       resetForm();
-      fetchContacts();
+      await fetchContacts();
     } catch (error) {
+      console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description:
-          error.response?.data?.error || error.message || "An error occurred",
+        description: error.message || "An error occurred",
         variant: "destructive",
       });
     } finally {
@@ -131,19 +175,28 @@ export default function EmergencyContactsPage() {
   };
 
   const handleDelete = async (contactId) => {
+    if (!token) {
+      toast({
+        title: "Error",
+        description: "Please login to delete contacts",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       await resourceApi.protected.deleteResource(contactId);
       toast({
         title: "Success",
         description: "Contact deleted successfully",
       });
-      fetchContacts();
+      await fetchContacts();
     } catch (error) {
+      console.error("Error deleting contact:", error);
       toast({
         title: "Error",
-        description:
-          error.response?.data?.error || error.message || "An error occurred",
+        description: error.message || "Failed to delete contact",
         variant: "destructive",
       });
     } finally {
