@@ -43,12 +43,12 @@ export default function EmergencyContactsPage() {
   const [formData, setFormData] = useState({
     name: "",
     category: "emergency_contact",
-    type: "emergency_number", 
+    type: "emergency_number",
     contact: {
       phone: "",
       email: "",
     },
-    emergencyLevel: "medium", 
+    emergency_level: "medium",
     metadata: {
       serviceHours: "24/7",
       lastUpdated: new Date().toISOString(),
@@ -61,7 +61,7 @@ export default function EmergencyContactsPage() {
   useEffect(() => {
     fetchContacts();
   }, []);
-  
+
   const validateForm = () => {
     if (!formData.name.trim()) {
       toast({
@@ -71,7 +71,7 @@ export default function EmergencyContactsPage() {
       });
       return false;
     }
-  
+
     if (!formData.contact.phone.trim()) {
       toast({
         title: "Validation Error",
@@ -80,7 +80,7 @@ export default function EmergencyContactsPage() {
       });
       return false;
     }
-  
+
     if (!validatePhoneNumber(formData.contact.phone)) {
       toast({
         title: "Validation Error",
@@ -89,7 +89,7 @@ export default function EmergencyContactsPage() {
       });
       return false;
     }
-  
+
     if (formData.contact.email && !validateEmail(formData.contact.email)) {
       toast({
         title: "Validation Error",
@@ -98,10 +98,10 @@ export default function EmergencyContactsPage() {
       });
       return false;
     }
-  
+
     return true;
   };
-  
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -133,7 +133,7 @@ export default function EmergencyContactsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!validateForm()) return;
 
     const submitData = {
@@ -144,19 +144,21 @@ export default function EmergencyContactsPage() {
         phone: formData.contact.phone,
         email: formData.contact.email || "",
       },
-      emergencyLevel: formData.emergencyLevel,
+      emergency_level: formData.emergency_level, // Changed to match backend
       metadata: {
         serviceHours: formData.metadata.serviceHours,
-        lastUpdated: new Date().toISOString(),
       },
       tags: formData.tags,
       status: "active",
     };
-  
+
     setIsLoading(true);
     try {
       if (editingContact) {
-        await resourceApi.protected.updateResource(editingContact._id, submitData);
+        await resourceApi.protected.updateResource(
+          editingContact.id,
+          submitData,
+        ); // Changed from _id to id
         toast({
           title: "Success",
           description: "Emergency contact updated successfully",
@@ -168,15 +170,15 @@ export default function EmergencyContactsPage() {
           description: "Emergency contact created successfully",
         });
       }
-  
+
       setIsDialogOpen(false);
       resetForm();
       await fetchContacts();
     } catch (error) {
-      console.error("Error submitting form:", error?.response?.data || error);
+      console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description: error?.response?.data?.error || "Failed to save contact",
+        description: error.response?.data?.error || "Failed to save contact",
         variant: "destructive",
       });
     } finally {
@@ -185,7 +187,6 @@ export default function EmergencyContactsPage() {
   };
 
   const handleDelete = async (contactId) => {
-
     setIsLoading(true);
     try {
       await resourceApi.protected.deleteResource(contactId);
@@ -216,10 +217,9 @@ export default function EmergencyContactsPage() {
         phone: contact.contact?.phone || "",
         email: contact.contact?.email || "",
       },
-      emergencyLevel: contact.emergencyLevel || "medium",
+      emergency_level: contact.emergency_level || "medium",
       metadata: {
         serviceHours: contact.metadata?.serviceHours || "24/7",
-        lastUpdated: new Date().toISOString(),
       },
       tags: contact.tags || [],
       status: contact.status || "active",
@@ -421,7 +421,7 @@ export default function EmergencyContactsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredContacts.map((contact) => (
             <Card
-              key={contact._id}
+              key={contact.id}
               className="hover:shadow-lg transition-shadow"
             >
               <CardHeader>
@@ -455,7 +455,7 @@ export default function EmergencyContactsPage() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDelete(contact._id)}
+                            onClick={() => handleDelete(contact.id)}
                             className="bg-red-500 hover:bg-red-600"
                           >
                             Delete
@@ -467,12 +467,12 @@ export default function EmergencyContactsPage() {
                 </div>
                 <Badge
                   variant={
-                    contact.emergencyLevel === "high"
+                    contact.emergency_level === "high"
                       ? "destructive"
                       : "secondary"
                   }
                 >
-                  {contact.emergencyLevel} priority
+                  {contact.emergency_level} priority
                 </Badge>
               </CardHeader>
               <CardContent>
