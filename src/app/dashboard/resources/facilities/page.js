@@ -54,7 +54,7 @@ export default function FacilitiesPage() {
       email: "",
     },
     location: {
-      type: "point",
+      type: "Point", 
       coordinates: [0, 0],
       address: {
         formatted_address: "",
@@ -65,10 +65,7 @@ export default function FacilitiesPage() {
       },
     },
     availability_status: "open",
-    metadata: {
-      capacity: 0,
-    },
-    capacity: 0,
+    metadata: {},
     operating_hours: {
       monday: { open: "09:00", close: "17:00", is24Hours: false },
       tuesday: { open: "09:00", close: "17:00", is24Hours: false },
@@ -78,8 +75,8 @@ export default function FacilitiesPage() {
       saturday: { open: "09:00", close: "17:00", is24Hours: false },
       sunday: { open: "09:00", close: "17:00", is24Hours: false },
     },
+    capacity: 0,
     tags: [],
-    status: "active",
   });
 
   useEffect(() => {
@@ -113,7 +110,7 @@ export default function FacilitiesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!token) {
       toast({
         title: "Error",
@@ -122,64 +119,73 @@ export default function FacilitiesPage() {
       });
       return;
     }
-
-    const longitude = Number(formData.location.coordinates[0]);
-    const latitude = Number(formData.location.coordinates[1]);
-
-    if (isNaN(longitude) || isNaN(latitude)) {
-      toast({
-        title: "Error",
-        description: "Invalid coordinates",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  
     try {
+      const longitude = Number(formData.location.coordinates[0]);
+      const latitude = Number(formData.location.coordinates[1]);
+  
+      if (isNaN(longitude) || isNaN(latitude)) {
+        toast({
+          title: "Error",
+          description: "Invalid coordinates",
+          variant: "destructive",
+        });
+        return;
+      }
       const requestBody = {
-        ...formData,
+        name: formData.name,
+        category: "facility",
+        type: formData.type,
+        contact: {
+          phone: formData.contact.phone,
+          email: formData.contact.email || undefined,
+        },
         location: {
-          type: "point",
+          type: "Point",
           coordinates: [longitude, latitude],
-          address: formData.location.address,
+          address: {
+            formatted_address: formData.location.address.formatted_address,
+            city: formData.location.address.city,
+            district: formData.location.address.district,
+            province: formData.location.address.province,
+            details: formData.location.address.details || "",
+          },
         },
-        capacity:
-          formData.type === "shelter"
-            ? Number(formData.metadata.capacity)
-            : undefined,
-        metadata: {
-          ...formData.metadata,
-          capacity:
-            formData.type === "shelter"
-              ? Number(formData.metadata.capacity)
-              : undefined,
-        },
+        availabilityStatus: formData.availability_status,
+        operatingHours: formData.operating_hours, 
+        tags: formData.tags.filter(Boolean),
+        metadata: {},
       };
-
+  
+      // Add capacity for shelters
+      if (formData.type === "shelter") {
+        requestBody.capacity = Number(formData.capacity);
+        requestBody.metadata.capacity = Number(formData.capacity);
+      }
+  
       if (editingFacility) {
-        await resourceApi.protected.updateResource(
-          editingFacility.id,
-          requestBody,
-        );
+        await resourceApi.protected.updateResource(editingFacility.id, requestBody);
         toast({
           title: "Success",
           description: "Facility updated successfully",
         });
       } else {
-        await resourceApi.protected.createResource(requestBody);
+        const response = await resourceApi.protected.createResource(requestBody);
+        console.log("Created resource:", response); 
         toast({
           title: "Success",
           description: "Facility created successfully",
         });
       }
-
+  
       setIsDialogOpen(false);
       resetForm();
       fetchFacilities();
     } catch (error) {
+      console.error("Error creating/updating facility:", error);
       toast({
         title: "Error",
-        description: error.message || "An error occurred",
+        description: error.response?.data?.error || error.message || "An error occurred",
         variant: "destructive",
       });
     }
