@@ -43,14 +43,15 @@ export default function EmergencyContactsPage() {
   const [formData, setFormData] = useState({
     name: "",
     category: "emergency_contact",
-    type: "emergency_number",
+    type: "emergency_number", 
     contact: {
       phone: "",
       email: "",
     },
-    emergencyLevel: "",
+    emergencyLevel: "medium", 
     metadata: {
       serviceHours: "24/7",
+      lastUpdated: new Date().toISOString(),
     },
     tags: [],
     status: "active",
@@ -134,17 +135,34 @@ export default function EmergencyContactsPage() {
     e.preventDefault();
   
     if (!validateForm()) return;
+
+    const submitData = {
+      name: formData.name,
+      category: "emergency_contact",
+      type: "emergency_number",
+      contact: {
+        phone: formData.contact.phone,
+        email: formData.contact.email || "",
+      },
+      emergencyLevel: formData.emergencyLevel,
+      metadata: {
+        serviceHours: formData.metadata.serviceHours,
+        lastUpdated: new Date().toISOString(),
+      },
+      tags: formData.tags,
+      status: "active",
+    };
   
     setIsLoading(true);
     try {
       if (editingContact) {
-        await resourceApi.protected.updateResource(editingContact._id, formData);
+        await resourceApi.protected.updateResource(editingContact._id, submitData);
         toast({
           title: "Success",
           description: "Emergency contact updated successfully",
         });
       } else {
-        await resourceApi.protected.createResource(formData);
+        await resourceApi.protected.createResource(submitData);
         toast({
           title: "Success",
           description: "Emergency contact created successfully",
@@ -155,10 +173,10 @@ export default function EmergencyContactsPage() {
       resetForm();
       await fetchContacts();
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error submitting form:", error?.response?.data || error);
       toast({
         title: "Error",
-        description: error.message || "An error occurred",
+        description: error?.response?.data?.error || "Failed to save contact",
         variant: "destructive",
       });
     } finally {
@@ -191,8 +209,20 @@ export default function EmergencyContactsPage() {
   const handleEdit = (contact) => {
     setEditingContact(contact);
     setFormData({
-      ...contact,
+      name: contact.name,
+      category: "emergency_contact",
+      type: "emergency_number",
+      contact: {
+        phone: contact.contact?.phone || "",
+        email: contact.contact?.email || "",
+      },
+      emergencyLevel: contact.emergencyLevel || "medium",
+      metadata: {
+        serviceHours: contact.metadata?.serviceHours || "24/7",
+        lastUpdated: new Date().toISOString(),
+      },
       tags: contact.tags || [],
+      status: contact.status || "active",
     });
     setIsDialogOpen(true);
   };
@@ -206,9 +236,10 @@ export default function EmergencyContactsPage() {
         phone: "",
         email: "",
       },
-      emergencyLevel: "",
+      emergencyLevel: "medium",
       metadata: {
         serviceHours: "24/7",
+        lastUpdated: new Date().toISOString(),
       },
       tags: [],
       status: "active",
