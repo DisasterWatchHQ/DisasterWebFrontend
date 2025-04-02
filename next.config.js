@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', process.env.NEXT_PRIVATE_API_URL 
-      ? process.env.NEXT_PRIVATE_API_URL.replace(/^https?:\/\//, '') 
+    domains: ['localhost', process.env.NEXT_PUBLIC_API_URL 
+      ? process.env.NEXT_PUBLIC_API_URL.replace(/^https?:\/\//, '') 
       : undefined
     ].filter(Boolean),
     remotePatterns: [
@@ -15,7 +15,7 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_API_URL 
       ? {
           protocol: 'https',
-          hostname: process.env.NEXT_PRIVATE_API_URL.replace(/^https?:\/\//, ''),
+          hostname: process.env.NEXT_PUBLIC_API_URL.replace(/^https?:\/\//, ''), // Changed from NEXT_PRIVATE_API_URL to NEXT_PUBLIC_API_URL
           pathname: '/uploads/**',
         }
       : null

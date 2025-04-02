@@ -84,8 +84,10 @@ export default function GuidesPage() {
     try {
       const params = selectedType !== "all" ? { type: selectedType } : {};
       const data = await resourceApi.public.getGuides(params);
-      setGuides(data.resources);
+      console.log("API Response:", data);
+      setGuides(data.resources || []);
     } catch (error) {
+      console.error("Fetch Error:", error);
       toast({
         title: "Error",
         description: "Failed to fetch guides",
@@ -236,6 +238,10 @@ export default function GuidesPage() {
       setEditingGuide(updatedGuide);
       setFormData({
         ...updatedGuide,
+        contact: {
+          phone: updatedGuide.contact?.phone || "",
+          email: updatedGuide.contact?.email || "",
+        },
         metadata: {
           ...updatedGuide.metadata,
           lastUpdated: new Date().toISOString(),
@@ -257,11 +263,14 @@ export default function GuidesPage() {
   const handleViewGuide = async (guide) => {
     setIsLoading(true);
     try {
+      console.log('Viewing guide:', guide); 
       const updatedGuide = await resourceApi.public.getResourceById(
-        guide.id || guide._id,
+        guide?.id || guide?._id
       );
+      console.log('Updated guide data:', updatedGuide); 
       setSelectedGuide(updatedGuide);
     } catch (error) {
+      console.error('View Guide Error:', error);
       toast({
         title: "Error",
         description: "Failed to load guide details",
@@ -272,10 +281,11 @@ export default function GuidesPage() {
     }
   };
 
-  const filteredGuides = guides.filter(
-    (guide) =>
-      guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      guide.description.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredGuides = guides.filter((guide) =>
+    guide && guide.name && guide.description
+      ? guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guide.description.toLowerCase().includes(searchTerm.toLowerCase())
+      : false,
   );
 
   const GuideDetailDialog = ({ guide, open, onClose }) => {
@@ -471,13 +481,13 @@ export default function GuidesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGuides.map((guide) => (
             <Card
-              key={guide.id || guide._id}
+              key={guide?.id || guide?._id}
               className="hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => handleViewGuide(guide)}
             >
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <CardTitle>{guide.name}</CardTitle>
+                  <CardTitle>{guide?.name}</CardTitle>
                   {token && (
                     <div className="flex gap-2">
                       <Button
@@ -527,7 +537,7 @@ export default function GuidesPage() {
                   )}
                 </div>
                 <div className="flex gap-2 mt-2">
-                  {(guide.tags || []).map((tag) => (
+                  {(guide?.tags || []).map((tag) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
                     </Badge>
@@ -536,12 +546,12 @@ export default function GuidesPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  {guide.description}
+                  {guide?.description}
                 </p>
               </CardContent>
               <CardFooter className="text-sm text-muted-foreground">
                 Last updated:{" "}
-                {guide.metadata && guide.metadata.lastUpdated
+                {guide?.metadata?.lastUpdated
                   ? new Date(guide.metadata.lastUpdated).toLocaleDateString()
                   : "Unknown"}
               </CardFooter>
