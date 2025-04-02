@@ -9,9 +9,19 @@ export const resourceApi = {
       return response.data;
     },
 
-    getGuides: async (params) => {
-      const response = await publicClient.get("/resources/guides", { params });
-      return response.data;
+    getGuides: async (params = {}) => {
+      try {
+        const queryString = new URLSearchParams(params).toString();
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/resources?${queryString}`,
+        );
+        if (!response.ok) throw new Error("Failed to fetch guides");
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("API Error:", error);
+        throw error;
+      }
     },
 
     getEmergencyContacts: async (params) => {
@@ -29,8 +39,17 @@ export const resourceApi = {
     },
 
     getResourceById: async (id) => {
-      const response = await publicClient.get(`/resources/${id}`);
-      return response.data;
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/resources/${id}`,
+        );
+        if (!response.ok) throw new Error("Failed to fetch guide");
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("API Error:", error);
+        throw error;
+      }
     },
   },
 
