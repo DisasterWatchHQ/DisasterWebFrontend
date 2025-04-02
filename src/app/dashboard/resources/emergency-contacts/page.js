@@ -48,10 +48,9 @@ export default function EmergencyContactsPage() {
       phone: "",
       email: "",
     },
-    emergency_level: "medium",
+    emergencyLevel: "medium", // Match the backend field name
     metadata: {
       serviceHours: "24/7",
-      lastUpdated: new Date().toISOString(),
     },
     tags: [],
     status: "active",
@@ -81,7 +80,8 @@ export default function EmergencyContactsPage() {
       return false;
     }
 
-    if (!validatePhoneNumber(formData.contact.phone)) {
+    // Match backend phone validation regex
+    if (!/^[\d+\s()-]+$/.test(formData.contact.phone.trim())) {
       toast({
         title: "Validation Error",
         description: "Please enter a valid phone number",
@@ -90,7 +90,11 @@ export default function EmergencyContactsPage() {
       return false;
     }
 
-    if (formData.contact.email && !validateEmail(formData.contact.email)) {
+    // Match backend email validation regex
+    if (
+      formData.contact.email &&
+      !/^\S+@\S+\.\S+$/.test(formData.contact.email.trim())
+    ) {
       toast({
         title: "Validation Error",
         description: "Please enter a valid email address",
@@ -136,19 +140,20 @@ export default function EmergencyContactsPage() {
 
     if (!validateForm()) return;
 
+    // Match exactly with the backend createResource controller requirements
     const submitData = {
       name: formData.name,
       category: "emergency_contact",
       type: "emergency_number",
       contact: {
-        phone: formData.contact.phone,
-        email: formData.contact.email || "",
+        phone: formData.contact.phone.trim(),
+        email: formData.contact.email.trim() || undefined, // Only include if not empty
       },
-      emergency_level: formData.emergency_level, // Changed to match backend
+      emergencyLevel: formData.emergency_level, // Match the controller's expected field name
       metadata: {
         serviceHours: formData.metadata.serviceHours,
       },
-      tags: formData.tags,
+      tags: formData.tags.filter((tag) => tag.trim()), // Filter out empty tags
       status: "active",
     };
 
@@ -158,13 +163,13 @@ export default function EmergencyContactsPage() {
         await resourceApi.protected.updateResource(
           editingContact.id,
           submitData,
-        ); // Changed from _id to id
+        );
         toast({
           title: "Success",
           description: "Emergency contact updated successfully",
         });
       } else {
-        await resourceApi.protected.createResource(submitData);
+        const response = await resourceApi.protected.createResource(submitData);
         toast({
           title: "Success",
           description: "Emergency contact created successfully",
@@ -176,9 +181,14 @@ export default function EmergencyContactsPage() {
       await fetchContacts();
     } catch (error) {
       console.error("Error submitting form:", error);
+      // More detailed error handling
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        "Failed to save contact";
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to save contact",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -239,7 +249,6 @@ export default function EmergencyContactsPage() {
       emergencyLevel: "medium",
       metadata: {
         serviceHours: "24/7",
-        lastUpdated: new Date().toISOString(),
       },
       tags: [],
       status: "active",
@@ -334,7 +343,6 @@ export default function EmergencyContactsPage() {
                   <SelectItem value="low">Low</SelectItem>
                 </SelectContent>
               </Select>
-
               <Input
                 placeholder="Service Hours"
                 value={formData.metadata.serviceHours}
