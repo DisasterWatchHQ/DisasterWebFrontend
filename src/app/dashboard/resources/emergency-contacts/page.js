@@ -48,7 +48,7 @@ export default function EmergencyContactsPage() {
       phone: "",
       email: "",
     },
-    emergency_level: "",
+    emergencyLevel: "",
     metadata: {
       serviceHours: "24/7",
     },
@@ -206,7 +206,7 @@ export default function EmergencyContactsPage() {
         phone: "",
         email: "",
       },
-      emergency_level: "",
+      emergencyLevel: "",
       metadata: {
         serviceHours: "24/7",
       },
@@ -224,7 +224,7 @@ export default function EmergencyContactsPage() {
       contact.contact?.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesLevel =
-      selectedLevel === "all" || contact.emergency_level === selectedLevel;
+      selectedLevel === "all" || contact.emergencyLevel === selectedLevel;
 
     return matchesSearch && matchesLevel;
   });
@@ -288,9 +288,9 @@ export default function EmergencyContactsPage() {
               </div>
 
               <Select
-                value={formData.emergency_level}
+                value={formData.emergencyLevel}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, emergency_level: value })
+                  setFormData({ ...formData, emergencyLevel: value })
                 }
                 required
               >
@@ -436,12 +436,12 @@ export default function EmergencyContactsPage() {
                 </div>
                 <Badge
                   variant={
-                    contact.emergency_level === "high"
+                    contact.emergencyLevel === "high"
                       ? "destructive"
                       : "secondary"
                   }
                 >
-                  {contact.emergency_level} priority
+                  {contact.emergencyLevel} priority
                 </Badge>
               </CardHeader>
               <CardContent>
