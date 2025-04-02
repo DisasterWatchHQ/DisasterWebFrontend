@@ -84,10 +84,8 @@ export default function GuidesPage() {
     try {
       const params = selectedType !== "all" ? { type: selectedType } : {};
       const data = await resourceApi.public.getGuides(params);
-      console.log("API Response:", data);
-      setGuides(data.resources || []);
+      setGuides(data.resources);
     } catch (error) {
-      console.error("Fetch Error:", error);
       toast({
         title: "Error",
         description: "Failed to fetch guides",
@@ -232,27 +230,27 @@ export default function GuidesPage() {
   const handleEdit = async (guide) => {
     setIsLoading(true);
     try {
-      const updatedGuide = await resourceApi.public.getResourceById(
-        guide.id || guide._id,
-      );
-      setEditingGuide(updatedGuide);
+      const response = await resourceApi.public.getResourceById(guide.id || guide._id);
+      if (!response) throw new Error("Failed to fetch guide details");
+      
+      setEditingGuide(response);
       setFormData({
-        ...updatedGuide,
+        ...response,
         contact: {
-          phone: updatedGuide.contact?.phone || "",
-          email: updatedGuide.contact?.email || "",
+          phone: response.contact?.phone || "",
+          email: response.contact?.email || "",
         },
         metadata: {
-          ...updatedGuide.metadata,
+          ...response.metadata,
           lastUpdated: new Date().toISOString(),
         },
       });
       setIsDialogOpen(true);
     } catch (error) {
-      console.error("Detailed error:", error);
+      console.error("Error fetching guide:", error);
       toast({
         title: "Error",
-        description: "Failed to load guide details",
+        description: error.message || "Failed to load guide details",
         variant: "destructive",
       });
     } finally {
@@ -263,17 +261,15 @@ export default function GuidesPage() {
   const handleViewGuide = async (guide) => {
     setIsLoading(true);
     try {
-      console.log('Viewing guide:', guide); 
-      const updatedGuide = await resourceApi.public.getResourceById(
-        guide?.id || guide?._id
-      );
-      console.log('Updated guide data:', updatedGuide); 
-      setSelectedGuide(updatedGuide);
+      const response = await resourceApi.public.getResourceById(guide.id || guide._id);
+      if (!response) throw new Error("Failed to fetch guide details");
+      
+      setSelectedGuide(response);
     } catch (error) {
-      console.error('View Guide Error:', error);
+      console.error("Error viewing guide:", error);
       toast({
         title: "Error",
-        description: "Failed to load guide details",
+        description: error.message || "Failed to load guide details",
         variant: "destructive",
       });
     } finally {
@@ -281,24 +277,23 @@ export default function GuidesPage() {
     }
   };
 
-  const filteredGuides = guides.filter((guide) =>
-    guide && guide.name && guide.description
-      ? guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        guide.description.toLowerCase().includes(searchTerm.toLowerCase())
-      : false,
+  const filteredGuides = guides.filter(
+    (guide) =>
+      guide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      guide.description.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const GuideDetailDialog = ({ guide, open, onClose }) => {
     if (!guide) return null;
-
+  
     return (
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{guide.name}</DialogTitle>
             <div className="flex gap-2 mt-2">
-              {(guide.tags || []).map((tag) => (
-                <Badge key={tag} variant="secondary">
+              {guide.tags?.map((tag, index) => (
+                <Badge key={index} variant="secondary">
                   {tag}
                 </Badge>
               ))}
@@ -306,11 +301,18 @@ export default function GuidesPage() {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-muted-foreground">{guide.description}</p>
-            <article className="prose prose-slate dark:prose-invert max-w-none">
+            <div className="prose prose-slate dark:prose-invert max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {guide.content}
+                {guide.content || ''}
               </ReactMarkdown>
-            </article>
+            </div>
+            {guide.contact && (
+              <div className="mt-4">
+                <h3 className="font-semibold">Contact Information:</h3>
+                {guide.contact.phone && <p>Phone: {guide.contact.phone}</p>}
+                {guide.contact.email && <p>Email: {guide.contact.email}</p>}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -462,9 +464,9 @@ export default function GuidesPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="evacuation">Evacuation</SelectItem>
-            <SelectItem value="first_aid">First Aid</SelectItem>
-            <SelectItem value="safety">Safety</SelectItem>
+            <SelectItem value="disaster_guide">Disaster Guide</SelectItem>
+            <SelectItem value="emergency_guide">Emergency Guide</SelectItem>
+            <SelectItem value="safety_guide">Safety Guide</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -481,22 +483,23 @@ export default function GuidesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredGuides.map((guide) => (
             <Card
-              key={guide?.id || guide?._id}
-              className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => handleViewGuide(guide)}
+              key={guide.id || guide._id}
+              className="hover:shadow-lg transition-shadow"
             >
               <CardHeader>
                 <div className="flex justify-between items-start">
-                  <CardTitle>{guide?.name}</CardTitle>
+                  <CardTitle 
+                    className="cursor-pointer"
+                    onClick={() => handleViewGuide(guide)}
+                  >
+                    {guide.name}
+                  </CardTitle>
                   {token && (
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(guide);
-                        }}
+                        onClick={() => handleEdit(guide)}
                         disabled={isLoading}
                       >
                         <Pencil className="h-4 w-4" />
@@ -537,7 +540,7 @@ export default function GuidesPage() {
                   )}
                 </div>
                 <div className="flex gap-2 mt-2">
-                  {(guide?.tags || []).map((tag) => (
+                  {(guide.tags || []).map((tag) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
                     </Badge>
@@ -546,12 +549,12 @@ export default function GuidesPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  {guide?.description}
+                  {guide.description}
                 </p>
               </CardContent>
               <CardFooter className="text-sm text-muted-foreground">
                 Last updated:{" "}
-                {guide?.metadata?.lastUpdated
+                {guide.metadata && guide.metadata.lastUpdated
                   ? new Date(guide.metadata.lastUpdated).toLocaleDateString()
                   : "Unknown"}
               </CardFooter>
